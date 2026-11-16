@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: clinical-audit-syria
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: PUBLIC_URL
+        sync: false
+      - key: CREATOR_EMAIL
+        sync: false
+      - key: CREATOR_PASSWORD
+        sync: false
+      - key: CREATOR_NAME
+        sync: false
+      - key: INVITE_CODE
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_REFRESH_TOKEN
+        sync: false
+      - key: DRIVE_ROOT_NAME
+        sync: false
+      - key: DRIVE_SHARE_WITH
+        sync: false
+      - key: SESSION_TTL_HOURS
+        value: "8"
+      - key: SESSION_IDLE_MINUTES
+        value: "30"
+      - key: BACKUP_INTERVAL_HOURS
+        value: "6"
+      - key: BACKUP_KEEP
+        value: "60"
+      - key: CROSS_SITE
+        value: "0"
+      - key: ALLOWED_ORIGINS
+        sync: false

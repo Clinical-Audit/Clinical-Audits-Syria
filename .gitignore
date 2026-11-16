@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Secrets — never commit these
+.env
+.env.local
+service_account.json
+oauth_token.json
+backup.key
+*.pem
+*.key
+certs/
+
+# Runtime data
+data/
+uploads/
+backups/
+*.log
+cj.txt
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

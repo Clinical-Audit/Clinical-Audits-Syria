@@ -1,0 +1,20 @@
+{
+  "name": "clinical-audit-syria",
+  "version": "1.0.0",
+  "description": "Clinical Audit Syria — full-stack clinical audit platform (HTTPS, server-side RBAC, encrypted backups, Google Drive sync)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "restore": "node tools/restore-backup.js"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.22.3",
+    "express-session": "^1.19.0",
+    "googleapis": "^190.0.0",
+    "multer": "^2.5.0"
+  }
+}

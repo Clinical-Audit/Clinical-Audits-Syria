@@ -1,0 +1,3018 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  لوحة التدقيق السريري — مشفى المواساة الجامعي، دمشق
+  ملف HTML واحد مستقل: HTML + CSS + JavaScript مضمّنة، دون أي مكتبات خارجية.
+  ----------------------------------------------------------------------------
+  مرجع التصميم: تقرير تحليل نموذج لوحة التحكم (تشرين الثاني/نوفمبر 2026)
+  + التسجيل الصوتي التعريفي + تصوير شاشة النموذج الأولي.
+  لوحة تدقيق جاهزة للتعبئة: هياكل فارغة
+  جاهزة لإدخال بيانات فريقكم الحقيقية. ابدأ من قسم (3) طبقة البيانات في الأسفل.
+  تنبيه: لا تُدخل بيانات مرضى حقيقية في نسخة تعمل محلياً داخل المتصفح.
+  ----------------------------------------------------------------------------
+  ملاحظة عن المصادر: رابط «لقطة الشاشة» في الطلب كان في الواقع تسجيل شاشة
+  للهاتف مدته 45 ثانية (MP4 وليس صورة ثابتة)، فتم تحليله بإطاراته المستخرجة
+  وبالـ OCR. بعض التفاصيل البصرية الدقيقة (الألوان والخطوط والمسافات) لم تكن
+  قابلة للقراءة الكاملة، فاعتُمد التقرير PDF كمصدر أول، وأُخذ من التسجيل
+  هيكل الشاشات والحقول فقط. كما أن استبيان التقييم المذكور في التقرير غير
+  متاح للتحقق، فلم تُبنَ عليه أي شاشة أو مؤشر.
+  ----------------------------------------------------------------------------
+  أقسام الملف:
+  1) الأنماط (CSS) — نظام تصميم موحّد، RTL، متجاوب، قابل للطباعة.
+  2) هيكل الواجهة (HTML) — شاشة الدخول + الهيكل الرئيسي.
+  3) طبقة البيانات (JS) — CONFIG + MOCK_DB، وهي نقطة استبدال البيانات الحقيقية.
+  4) منطق العرض والتفاعل (JS) — لوحة المعلومات، المشاريع، التفاصيل، المعالج.
+  ============================================================================
+-->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta name="color-scheme" content="light">
+<title>Clinical Audit-Syria | جامعة دمشق</title>
+<style>
+/* ==========================================================================
+   1) نظام التصميم — متغيّرات الألوان والمسافات والخطوط
+   ملاحظة: الخطوط من نظام التشغيل لضمان العمل دون إنترنت (لا خطوط خارجية).
+   ========================================================================== */
+:root{
+  --navy:#0a3442;
+  --navy-2:#0e4353;
+  --teal:#0f6b7d;
+  --teal-2:#13879c;
+  --teal-soft:#e6f3f6;
+  --bg:#f3f7f9;
+  --card:#ffffff;
+  --line:#dfe9ed;
+  --line-2:#edf3f5;
+  --text:#12313b;
+  --muted:#5c7782;
+  --muted-2:#7d949d;
+  --green:#147a3d;
+  --green-bg:#e8f6ed;
+  --amber:#a45a06;
+  --amber-bg:#fdf3e2;
+  --red:#b42323;
+  --red-bg:#fdecec;
+  --blue:#1f4f8f;
+  --blue-bg:#eaf1fb;
+  --gray-bg:#eef3f5;
+  --shadow-sm:0 1px 2px rgba(10,52,66,.05), 0 2px 8px rgba(10,52,66,.04);
+  --shadow:0 4px 18px rgba(10,52,66,.08);
+  --shadow-lg:0 18px 50px rgba(10,52,66,.18);
+  --r-sm:8px;
+  --r:12px;
+  --r-lg:18px;
+  --sidebar:264px;
+  --topbar:68px;
+  --font:"Segoe UI","Noto Kufi Arabic","Cairo","Dubai","Tahoma",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{max-width:100%;overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--teal);text-decoration:none}
+h1,h2,h3,h4,p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+svg{display:block}
+:focus-visible{outline:3px solid #f0a202;outline-offset:2px;border-radius:6px}
+.skip-link{position:fixed;top:-60px;right:16px;z-index:9999;background:var(--navy);color:#fff;padding:10px 16px;border-radius:0 0 10px 10px;transition:.2s}
+.skip-link:focus{top:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ---------- عناصر عامة ---------- */
+.icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:0 18px;border-radius:10px;border:1px solid transparent;
+  font-weight:700;font-size:14px;transition:.18s;white-space:nowrap;
+}
+.btn .icon{width:18px;height:18px}
+.btn-primary{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(15,107,125,.22)}
+.btn-primary:hover{background:#0b5a69}
+.btn-dark{background:var(--navy);color:#fff}
+.btn-dark:hover{background:#072733}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--text)}
+.btn-ghost:hover{border-color:#b9cdd5;background:#f8fbfc}
+.btn-soft{background:var(--teal-soft);color:var(--teal);border-color:#cfe7ec}
+.btn-soft:hover{background:#d9edf1}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:#f4cfcf}
+.btn-sm{min-height:36px;padding:0 12px;font-size:13px;border-radius:8px}
+.btn-icon{width:44px;padding:0;flex:none}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn-block{width:100%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-sm)}
+.card-pad{padding:22px}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+.card-title{font-size:17px;font-weight:800;letter-spacing:-.2px}
+.card-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.tiny{font-size:11.5px}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.divider{height:1px;background:var(--line-2);margin:16px 0}
+.grid{display:grid;gap:18px}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.flex{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wrap{flex-wrap:wrap}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}
+.hide{display:none !important}
+
+/* ---------- شاشة الدخول ---------- */
+#loginScreen{
+  position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:1.05fr .95fr;
+  background:var(--bg);overflow:auto;
+}
+.login-brand{
+  position:relative;background:linear-gradient(150deg,#082c38 0%,#0a3d4d 55%,#0f6b7d 100%);
+  color:#fff;padding:54px 56px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
+}
+.login-brand::before{
+  content:"";position:absolute;width:520px;height:520px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);left:-180px;top:-160px;
+}
+.login-brand::after{
+  content:"";position:absolute;width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,rgba(19,135,156,.45),transparent 68%);left:-60px;bottom:-120px;
+}
+.login-brand > *{position:relative;z-index:1}
+.brand-lockup{display:flex;align-items:center;gap:14px}
+.brand-mark{
+  width:54px;height:54px;border-radius:15px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;flex:none;
+}
+.brand-mark svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:1.7}
+.brand-name{font-size:17px;font-weight:800;line-height:1.35}
+.brand-sub{font-size:12.5px;color:#b9d7df}
+.login-hero h1{font-size:38px;line-height:1.35;font-weight:800;letter-spacing:-.6px;margin-bottom:16px}
+.login-hero p{color:#c6dde4;font-size:15px;max-width:520px;line-height:1.9}
+.login-points{display:grid;gap:12px;margin-top:28px}
+.login-point{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;color:#d8e9ee}
+.login-point .dot{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.12);display:grid;place-items:center;flex:none;color:#8fd3df}
+.login-point .dot svg{width:15px;height:15px}
+.login-foot{font-size:11.5px;color:#9fc1ca;border-top:1px solid rgba(255,255,255,.14);padding-top:18px;line-height:1.8}
+.login-panel{display:flex;align-items:center;justify-content:center;padding:40px 28px}
+.login-box{width:100%;max-width:470px}
+.login-box h2{font-size:26px;font-weight:800;margin-bottom:6px}
+.login-box .lead{color:var(--muted);font-size:14px;margin-bottom:24px}
+.role-grid{display:grid;gap:12px;margin-bottom:20px}
+.role-card{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:right;background:#fff;
+  border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;transition:.18s;
+}
+.role-card:hover{border-color:var(--teal-2);box-shadow:var(--shadow);transform:translateY(-1px)}
+.role-card .role-ico{width:44px;height:44px;border-radius:12px;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;flex:none}
+.role-card .role-ico svg{width:22px;height:22px}
+.role-card b{display:block;font-size:14.5px}
+.role-card span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.role-card .arrow{margin-right:auto;color:var(--muted-2)}
+.notice{
+  display:flex;gap:11px;padding:13px 15px;border-radius:12px;font-size:12.5px;line-height:1.75;
+  background:var(--amber-bg);border:1px solid #f2ddb8;color:#70400a;
+}
+.notice .icon{width:19px;height:19px;margin-top:2px;flex:none}
+.notice-red{background:var(--red-bg);border-color:#f3cccc;color:#7c1d1d}
+.notice-blue{background:var(--blue-bg);border-color:#d3e1f5;color:#1d3f70}
+.notice-green{background:var(--green-bg);border-color:#c9e8d5;color:#0f5c2e}
+.login-legal{margin-top:16px;font-size:11.5px;color:var(--muted-2);line-height:1.8;text-align:center}
+
+/* ---------- هيكل التطبيق ---------- */
+#appShell{min-height:100vh}
+.sidebar{
+  position:fixed;top:0;right:0;bottom:0;width:var(--sidebar);background:var(--navy);
+  color:#dcebf0;z-index:80;display:flex;flex-direction:column;transition:transform .25s;
+}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:20px 18px 18px;border-bottom:1px solid rgba(255,255,255,.09)}
+.sb-brand .brand-mark{width:42px;height:42px;border-radius:11px}
+.sb-brand .brand-mark svg{width:24px;height:24px}
+.sb-brand b{font-size:13.5px;line-height:1.4;display:block;color:#fff}
+.sb-brand span{font-size:10.5px;color:#9fc1ca;display:block;margin-top:2px}
+.sb-nav{padding:14px 12px;overflow:auto;flex:1}
+.sb-label{font-size:10.5px;letter-spacing:.4px;color:#7fa7b2;padding:12px 12px 7px;font-weight:700}
+.sb-item{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;color:#c9dee4;
+  font-size:13.5px;font-weight:600;margin-bottom:3px;transition:.16s;border:1px solid transparent;width:100%;background:none;text-align:right;
+}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-item.active{background:rgba(19,135,156,.28);border-color:rgba(19,135,156,.45);color:#fff}
+.sb-item .icon{width:19px;height:19px;opacity:.9}
+.sb-item .count{margin-right:auto;background:rgba(255,255,255,.12);border-radius:20px;font-size:10.5px;padding:1px 8px;font-weight:700}
+.sb-item.active .count{background:rgba(255,255,255,.2)}
+.sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.09);font-size:11px;color:#8fb3bd;line-height:1.7}
+.sb-user{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#13879c,#0f6b7d);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;flex:none;border:2px solid rgba(255,255,255,.18)}
+.sb-user b{display:block;font-size:12.5px;color:#fff}
+.sb-user span{display:block;font-size:10.5px;color:#9fc1ca}
+
+.main{margin-right:var(--sidebar);min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  height:var(--topbar);background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 26px;
+  position:sticky;top:0;z-index:60;
+}
+.menu-btn{display:none}
+.tb-title{font-size:16px;font-weight:800;white-space:nowrap}
+.tb-crumb{font-size:11.5px;color:var(--muted);margin-top:1px}
+.tb-search{
+  margin-right:auto;display:flex;align-items:center;gap:8px;background:var(--bg);
+  border:1px solid var(--line);border-radius:10px;padding:0 12px;height:42px;width:300px;max-width:34vw;
+}
+.tb-search .icon{width:17px;height:17px;color:var(--muted)}
+.tb-search input{border:0;background:none;outline:none;width:100%;font-size:13px}
+.tb-date{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tb-date .icon{width:16px;height:16px}
+.role-chip{display:flex;align-items:center;gap:7px;background:var(--teal-soft);color:var(--teal);border:1px solid #cfe7ec;border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.role-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--teal-2)}
+.content{padding:26px;max-width:1560px;width:100%;margin:0 auto;flex:1}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}
+.page-title{font-size:25px;font-weight:800;letter-spacing:-.5px;line-height:1.35}
+.page-sub{font-size:13px;color:var(--muted);margin-top:5px;max-width:760px}
+.page-actions{display:flex;gap:9px;flex-wrap:wrap}
+.demo-strip{
+  display:flex;align-items:center;gap:10px;background:#fff8e8;border:1px solid #f0dcb0;
+  color:#6f4a0d;border-radius:12px;padding:9px 14px;font-size:12px;margin-bottom:18px;
+}
+.demo-strip .icon{width:17px;height:17px;flex:none}
+.demo-strip b{font-weight:800}
+
+/* ---------- بطاقات المؤشرات ---------- */
+.kpi{position:relative;overflow:hidden;padding:19px 20px;min-height:132px;display:flex;flex-direction:column;justify-content:space-between}
+.kpi::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;left:-42px;top:-46px;background:var(--teal-soft);opacity:.7}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1}
+.kpi-label{font-size:12.5px;color:var(--muted);font-weight:700}
+.kpi-ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--teal-soft);color:var(--teal);flex:none}
+.kpi-ico .icon{width:20px;height:20px}
+.kpi-val{font-size:34px;font-weight:800;line-height:1.1;letter-spacing:-1px;position:relative;z-index:1;margin-top:8px}
+.kpi-val small{font-size:15px;font-weight:700;color:var(--muted);margin-right:3px}
+.kpi-foot{font-size:11.5px;color:var(--muted);position:relative;z-index:1;display:flex;align-items:center;gap:6px;margin-top:6px}
+.kpi-foot .icon{width:14px;height:14px}
+.kpi.warn .kpi-ico{background:var(--amber-bg);color:var(--amber)}
+.kpi.warn::after{background:var(--amber-bg)}
+.kpi.bad .kpi-ico{background:var(--red-bg);color:var(--red)}
+.kpi.bad::after{background:var(--red-bg)}
+.kpi.good .kpi-ico{background:var(--green-bg);color:var(--green)}
+.kpi.good::after{background:var(--green-bg)}
+.trend-up{color:var(--green);font-weight:700}
+.trend-down{color:var(--red);font-weight:700}
+
+/* ---------- الشارات والحالات ---------- */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:3px 10px;
+  font-size:11.5px;font-weight:700;line-height:1.7;white-space:nowrap;border:1px solid transparent;
+}
+.badge .sym{font-size:10px;line-height:1}
+.st-excellent{background:var(--green-bg);color:var(--green);border-color:#c9e8d5}
+.st-acceptable{background:var(--amber-bg);color:var(--amber);border-color:#f2ddb8}
+.st-improve{background:var(--red-bg);color:var(--red);border-color:#f3cccc}
+.st-neutral{background:var(--gray-bg);color:#4d6670;border-color:#dbe6ea}
+.st-info{background:var(--blue-bg);color:var(--blue);border-color:#d3e1f5}
+.st-teal{background:var(--teal-soft);color:var(--teal);border-color:#cfe7ec}
+.stage-badge{background:#f0f5f7;color:#3d5c67;border:1px solid #dbe6ea;font-weight:700}
+.sev-high{background:var(--red-bg);color:var(--red);border-color:#f3cccc}
+.sev-med{background:var(--amber-bg);color:var(--amber);border-color:#f2ddb8}
+.sev-low{background:var(--green-bg);color:var(--green);border-color:#c9e8d5}
+
+/* ---------- الرسوم البيانية ---------- */
+.chart-wrap{position:relative;width:100%}
+.donut-box{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.donut{position:relative;width:168px;height:168px;flex:none}
+.donut svg{width:168px;height:168px;transform:rotate(-90deg)}
+.donut .track{fill:none;stroke:#eaf1f4;stroke-width:15}
+.donut .bar{fill:none;stroke:var(--teal-2);stroke-width:15;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.donut-center b{font-size:31px;font-weight:800;line-height:1;letter-spacing:-1px}
+.donut-center span{font-size:10.5px;color:var(--muted);margin-top:5px}
+.legend{display:grid;gap:9px;flex:1;min-width:150px}
+.legend-row{display:flex;align-items:center;gap:9px;font-size:12.5px}
+.legend-dot{width:9px;height:9px;border-radius:3px;flex:none}
+.legend-row b{margin-right:auto;font-weight:800}
+.bars{display:grid;gap:13px}
+.bar-row{display:grid;grid-template-columns:120px 1fr 46px;align-items:center;gap:10px;font-size:12.5px}
+.bar-track{height:9px;background:#edf3f5;border-radius:20px;overflow:hidden}
+.bar-fill{height:100%;border-radius:20px;background:var(--teal-2);transition:width .7s ease}
+.bar-fill.good{background:#1a9a52}.bar-fill.warn{background:#d38a1c}.bar-fill.bad{background:#cf3b3b}
+.bar-val{font-weight:800;text-align:left;font-size:12px}
+.spark{width:100%;height:auto;overflow:visible}
+.spark .grid-line{stroke:#e8eff2;stroke-width:1}
+.spark .axis-label{fill:#7d949d;font-size:10px;font-family:var(--font)}
+.spark .line{fill:none;stroke:var(--teal-2);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.spark .area{fill:url(#areaGrad);opacity:.5}
+.spark .pt{fill:#fff;stroke:var(--teal-2);stroke-width:2.5}
+.spark .pt-label{fill:#12313b;font-size:10.5px;font-weight:700;font-family:var(--font)}
+.compare-bars{display:grid;gap:12px}
+.cmp-row{display:grid;grid-template-columns:1fr 92px;gap:10px;align-items:center}
+.cmp-label{font-size:12px;margin-bottom:5px;color:#33525e}
+.cmp-track{display:flex;flex-direction:column;gap:4px}
+.cmp-line{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--muted)}
+.cmp-bar{height:8px;border-radius:20px;flex:1;background:#edf3f5;overflow:hidden}
+.cmp-bar i{display:block;height:100%;border-radius:20px}
+.cmp-base i{background:#9db6bf}
+.cmp-now i{background:var(--teal-2)}
+.cmp-val{width:34px;text-align:left;font-weight:800;font-size:10.5px;color:var(--text)}
+
+/* ---------- الجداول ---------- */
+.table-wrap{overflow:auto;border-radius:var(--r);border:1px solid var(--line-2)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+thead th{
+  background:#f6fafb;color:#4b6873;font-size:11.5px;font-weight:800;text-align:right;
+  padding:11px 13px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;z-index:2;
+}
+tbody td{padding:12px 13px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#fafdfe}
+.td-title{font-weight:800;font-size:13px;line-height:1.5}
+.td-code{font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:.3px;margin-bottom:2px}
+.td-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.row-click{cursor:pointer}
+.mini-progress{display:flex;align-items:center;gap:8px;min-width:118px}
+.mini-track{height:7px;background:#edf3f5;border-radius:20px;overflow:hidden;flex:1}
+.mini-fill{height:100%;border-radius:20px;background:var(--teal-2)}
+.mini-fill.good{background:#1a9a52}.mini-fill.warn{background:#d38a1c}.mini-fill.bad{background:#cf3b3b}
+.mini-val{font-size:11.5px;font-weight:800;width:34px;text-align:left}
+.link-btn{background:none;border:0;color:var(--teal);font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:4px;padding:6px 4px;border-radius:6px}
+.link-btn:hover{text-decoration:underline}
+.link-btn .icon{width:15px;height:15px}
+
+/* ---------- أدوات التصفية ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:700;color:#3f5c67}
+.field .hint{font-size:11px;color:var(--muted);line-height:1.6}
+.input,.select,.textarea{
+  width:100%;background:#fff;border:1.5px solid var(--line);border-radius:10px;
+  padding:10px 12px;min-height:44px;outline:none;transition:.16s;font-size:13.5px;
+}
+.input:hover,.select:hover,.textarea:hover{border-color:#c3d6dd}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--teal-2);box-shadow:0 0 0 3px rgba(19,135,156,.12)}
+.textarea{min-height:92px;resize:vertical;line-height:1.7}
+.input.err,.select.err,.textarea.err{border-color:var(--red);background:#fffafa}
+.err-msg{font-size:11px;color:var(--red);font-weight:700;display:none}
+.err-msg.show{display:block}
+.search-box{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;height:44px;min-width:230px;flex:1;max-width:360px}
+.search-box .icon{width:17px;height:17px;color:var(--muted)}
+.search-box input{border:0;outline:none;width:100%;font-size:13px;background:none}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;color:#4d6670;min-height:36px}
+.chip:hover{border-color:#b9cdd5}
+.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* ---------- تفاصيل المشروع ---------- */
+.detail-hero{padding:22px 24px;margin-bottom:18px}
+.detail-top{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.detail-title{font-size:22px;font-weight:800;line-height:1.4;letter-spacing:-.4px}
+.detail-meta{display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+.detail-meta span{display:inline-flex;align-items:center;gap:6px}
+.detail-meta .icon{width:15px;height:15px}
+.detail-score{display:flex;align-items:center;gap:14px;background:#f8fbfc;border:1px solid var(--line);border-radius:14px;padding:12px 16px;min-width:210px}
+.score-num{font-size:30px;font-weight:800;line-height:1}
+.score-label{font-size:11px;color:var(--muted)}
+.score-label b{display:block;font-size:12.5px;color:var(--text);margin-top:2px}
+.stepper{display:flex;gap:0;overflow:auto;padding:14px 4px 4px;margin-top:16px}
+.step{flex:1;min-width:92px;position:relative;text-align:center;padding-top:18px;font-size:10.5px;color:var(--muted);line-height:1.4}
+.step::before{content:"";position:absolute;top:5px;right:50%;width:100%;height:2px;background:var(--line);z-index:0}
+.step:first-child::before{display:none}
+.step .dot{position:absolute;top:0;right:50%;transform:translateX(50%);width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #c7d8de;z-index:1}
+.step.done{color:var(--teal)}
+.step.done .dot{background:var(--teal-2);border-color:var(--teal-2)}
+.step.done::before{background:var(--teal-2)}
+.step.current{color:var(--navy);font-weight:800}
+.step.current .dot{background:#fff;border-color:var(--teal-2);box-shadow:0 0 0 4px rgba(19,135,156,.16)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow:auto}
+.tab{background:none;border:0;border-bottom:2.5px solid transparent;padding:11px 15px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;min-height:44px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal-2)}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.info-item{background:#f8fbfc;border:1px solid var(--line-2);border-radius:12px;padding:13px 15px}
+.info-item .lbl{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.info-item .val{font-size:13px;line-height:1.7}
+.criteria-table td{vertical-align:top}
+.crit-text{font-weight:700;font-size:12.5px;line-height:1.65;max-width:330px}
+.crit-src{font-size:10.5px;color:var(--muted);margin-top:3px}
+.action-card{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;background:#fff}
+.action-card.overdue{border-color:#f0c4c4;background:#fffafa}
+.action-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.action-title{font-size:13.5px;font-weight:800;line-height:1.6}
+.action-meta{display:flex;gap:8px 16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
+.why-chain{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.why{background:#f4f8fa;border:1px solid #e2ecef;border-radius:8px;padding:4px 9px;font-size:10.5px;color:#45636e}
+.why b{color:var(--teal)}
+.timeline{position:relative;padding-right:22px}
+.timeline::before{content:"";position:absolute;right:6px;top:4px;bottom:4px;width:2px;background:var(--line)}
+.tl-item{position:relative;padding-bottom:16px}
+.tl-item::before{content:"";position:absolute;right:-21px;top:5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--teal-2)}
+.tl-item .tl-time{font-size:10.5px;color:var(--muted);margin-bottom:2px}
+.tl-item .tl-text{font-size:12.5px;line-height:1.7}
+.tl-item .tl-text b{font-weight:800}
+.attach-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2)}
+.attach-row:last-child{border-bottom:0}
+.attach-ico{width:38px;height:38px;border-radius:10px;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;flex:none}
+.attach-ico .icon{width:19px;height:19px}
+.attach-name{font-size:12.5px;font-weight:700;line-height:1.5}
+.attach-meta{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+/* ---------- المعالج متعدد الخطوات ---------- */
+.wizard{max-width:1080px;margin:0 auto}
+.wiz-head{margin-bottom:18px}
+.wiz-progress{height:8px;background:#e6eef1;border-radius:20px;overflow:hidden;margin-top:12px}
+.wiz-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-2));border-radius:20px;transition:width .3s}
+.wiz-steps{display:flex;gap:6px;overflow:auto;margin-top:12px;padding-bottom:4px}
+.wiz-step{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);padding:6px 10px;border-radius:20px;white-space:nowrap;border:1px solid transparent}
+.wiz-step .n{width:20px;height:20px;border-radius:50%;background:#eaf1f4;display:grid;place-items:center;font-size:10px;font-weight:800;flex:none}
+.wiz-step.active{background:var(--teal-soft);color:var(--teal);border-color:#cfe7ec;font-weight:800}
+.wiz-step.active .n{background:var(--teal);color:#fff}
+.wiz-step.done{color:var(--green)}
+.wiz-step.done .n{background:var(--green-bg);color:var(--green)}
+.wiz-body{padding:26px}
+.wiz-title{font-size:19px;font-weight:800;margin-bottom:4px}
+.wiz-sub{font-size:12.5px;color:var(--muted);margin-bottom:22px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.form-grid .full{grid-column:1/-1}
+.req{color:var(--red);font-weight:800}
+.wiz-foot{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:24px;padding-top:18px;border-top:1px solid var(--line-2);flex-wrap:wrap}
+.autosave{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.autosave .icon{width:14px;height:14px;color:var(--green)}
+.crit-editor{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:#fbfdfe}
+.crit-editor-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+.crit-editor-head b{font-size:12.5px}
+.crit-editor .form-grid{gap:11px}
+.crit-editor .input,.crit-editor .select,.crit-editor .textarea{font-size:12.5px;padding:8px 10px;min-height:40px}
+.crit-editor .textarea{min-height:64px}
+.mini-note{font-size:11px;color:var(--muted);background:#f4f8fa;border:1px dashed #d7e5ea;border-radius:8px;padding:8px 10px;line-height:1.7}
+.rate-preview{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;color:var(--teal)}
+.rate-preview .mini-track{width:90px;flex:none}
+.summary-box{background:#f6fafb;border:1px solid var(--line);border-radius:14px;padding:18px}
+.summary-line{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed #dfe9ed;font-size:12.5px}
+.summary-line:last-child{border-bottom:0}
+.summary-line b{font-weight:800}
+
+/* ---------- الدليل والمصطلحات ---------- */
+.glossary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.term-card{padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.term-card b{font-size:14px;display:block}
+.term-card .en{font-size:11px;color:var(--teal);font-weight:700;margin-bottom:6px;direction:ltr;text-align:right}
+.term-card p{font-size:12px;color:var(--muted);line-height:1.8}
+.role-matrix td,.role-matrix th{font-size:12px}
+.check{color:var(--green);font-weight:800}
+.cross{color:#b8c8ce;font-weight:800}
+
+/* ---------- النوافذ والتنبيهات ---------- */
+.modal-back{position:fixed;inset:0;background:rgba(7,35,45,.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal{background:#fff;border-radius:18px;box-shadow:var(--shadow-lg);width:100%;max-width:560px;max-height:88vh;overflow:auto}
+.modal-head{padding:20px 22px 0;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.modal-head h3{font-size:18px;font-weight:800;line-height:1.4}
+.modal-body{padding:16px 22px 4px;font-size:13px;line-height:1.8;color:#33525e}
+.modal-foot{padding:16px 22px 20px;display:flex;justify-content:flex-start;gap:9px;flex-wrap:wrap}
+.toast-wrap{position:fixed;bottom:22px;left:22px;z-index:1200;display:flex;flex-direction:column;gap:9px}
+.toast{background:var(--navy);color:#fff;border-radius:12px;padding:12px 16px;font-size:12.5px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:9px;animation:slideIn .25s ease}
+.toast .icon{width:18px;height:18px;color:#8fd3df}
+.toast.warn{background:#7a4405}
+.toast.bad{background:#8f1d1d}
+@keyframes slideIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.empty{padding:44px 20px;text-align:center;color:var(--muted)}
+.empty .icon{width:42px;height:42px;margin:0 auto 10px;color:#a9c0c8}
+.empty b{display:block;color:var(--text);font-size:14px;margin-bottom:4px}
+
+/* ---------- التذييل ---------- */
+.footer{border-top:1px solid var(--line);padding:16px 26px;font-size:11px;color:var(--muted-2);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff}
+.footer b{color:#4d6670}
+
+/* ---------- الاستجابة للأجهزة ---------- */
+@media (max-width:1180px){
+  .grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tb-search{width:240px}
+  .tb-date{display:none}
+}
+@media (max-width:1024px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(100%);width:280px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:none}
+  .main{margin-right:0}
+  .menu-btn{display:inline-flex}
+  .content{padding:20px}
+  .login-brand{padding:36px}
+  .login-hero h1{font-size:30px}
+  .detail-title{font-size:20px}
+}
+@media (max-width:860px){
+  #loginScreen{grid-template-columns:1fr}
+  .login-brand{padding:28px 24px;min-height:auto}
+  .login-hero h1{font-size:26px;margin-bottom:8px}
+  .login-hero p{font-size:13px}
+  .login-points{display:none}
+  .login-foot{display:none}
+  .login-panel{padding:28px 20px 40px}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .info-grid{grid-template-columns:1fr}
+  .glossary-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .tb-search{display:none}
+  .tb-title{font-size:14px}
+  .role-chip{display:none}
+  .page-title{font-size:21px}
+  .detail-score{width:100%}
+}
+@media (max-width:640px){
+  .content{padding:14px}
+  .topbar{padding:0 14px;gap:8px}
+  .kpi{padding:15px;min-height:118px}
+  .kpi-val{font-size:28px}
+  .grid-4{grid-template-columns:1fr 1fr;gap:10px}
+  .card-pad{padding:16px}
+  .detail-hero{padding:16px}
+  .wiz-body{padding:18px}
+  .page-actions{width:100%}
+  .page-actions .btn{flex:1}
+  .donut-box{gap:14px}
+  .donut,.donut svg{width:140px;height:140px}
+  .bar-row{grid-template-columns:92px 1fr 40px}
+  /* تحويل الجداول إلى بطاقات على الهاتف */
+  table.responsive{min-width:0}
+  table.responsive thead{display:none}
+  table.responsive tbody tr{display:block;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:10px;background:#fff}
+  table.responsive tbody td{display:flex;justify-content:space-between;gap:12px;border:0;padding:6px 4px;text-align:left}
+  table.responsive tbody td::before{content:attr(data-label);font-size:11px;color:var(--muted);font-weight:700;text-align:right;flex:none}
+  table.responsive tbody td.td-main{display:block;text-align:right;padding-bottom:8px;border-bottom:1px dashed var(--line-2);margin-bottom:4px}
+  table.responsive tbody td.td-main::before{display:none}
+  .footer{padding:14px;font-size:10.5px}
+}
+@media print{
+  .sidebar,.topbar,.page-actions,.tabs,.demo-strip,.footer,.no-print,.toast-wrap,.skip-link,.btn{display:none !important}
+  .main{margin:0}
+  .content{padding:0;max-width:none}
+  body{background:#fff;font-size:11pt}
+  .card{box-shadow:none;break-inside:avoid}
+  .detail-hero{break-inside:avoid}
+  .table-wrap{overflow:visible}
+  table{min-width:0;font-size:9pt}
+  .stepper{display:none}
+  @page{size:A4;margin:14mm}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+}
+
+/* ---------- نظام الحسابات ---------- */
+.auth-tabs{display:flex;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:5px;margin-bottom:20px}
+.auth-tab{flex:1;border:0;background:none;padding:10px;border-radius:9px;font-size:13.5px;font-weight:700;color:var(--muted);min-height:42px}
+.auth-tab.active{background:#fff;color:var(--teal);box-shadow:var(--shadow)}
+.auth-form{display:grid;gap:14px}
+.auth-form .field{margin:0}
+.auth-msg{font-size:12.5px;line-height:1.7;border-radius:10px;padding:10px 12px;display:none;margin-bottom:14px}
+.auth-msg.show{display:block}
+.auth-msg.bad{background:var(--red-bg);color:#7c1d1d;border:1px solid #f3cccc}
+.auth-msg.good{background:var(--green-bg);color:#0f5c2e;border:1px solid #c9e8d5}
+.wiz-step{cursor:pointer;user-select:none}
+.wiz-step:hover{color:var(--teal)}
+.member-line{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.member-line .input{flex:1}
+.team-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line-2)}
+.team-row:last-child{border-bottom:0}
+.team-avatar{width:40px;height:40px;border-radius:50%;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-weight:800;flex:none}
+
+
+/* ================= الجولة الثانية ================= */
+.print-ico{color:var(--teal);background:var(--teal-soft);border:1px solid #cfe6ea}
+.print-ico:hover{background:#d9eef2}
+.subteam-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--line-2)}
+.subteam-row:last-child{border-bottom:0}
+.subteam-badge{width:44px;height:44px;border-radius:12px;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-weight:800;flex:none;font-size:13px}
+.creator-card{border-right:4px solid #d38a1c}
+.creator-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line-2);font-size:12.5px;flex-wrap:wrap}
+.creator-row:last-child{border-bottom:0}
+.last-updated{text-align:left;font-size:11px;color:var(--muted-2);margin-top:18px;padding-bottom:6px}
+.doc-import{border:1px dashed var(--line);border-radius:12px;padding:14px;background:#fbfdfd}
+.doc-import .field{margin:0}
+.range-tag{font-size:10.5px;color:var(--muted-2);margin-right:4px}
+
+/* ---------- شاشة الدخول: تصميم مركزي ---------- */
+#loginScreen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
+  padding:46px 22px;overflow:auto;
+  background:radial-gradient(1100px 520px at 50% -8%,#12808f 0%,#0a3d4d 48%,#07232c 100%);
+}
+.login-brand{
+  background:none;color:#fff;padding:0;display:flex;flex-direction:column;align-items:center;
+  text-align:center;max-width:820px;width:100%;overflow:visible;justify-content:flex-start;
+}
+.login-brand::before,.login-brand::after{display:none}
+.login-brand .brand-lockup{justify-content:center}
+.login-hero{margin-top:22px}
+.login-hero h1{font-size:44px;line-height:1.3;letter-spacing:-.8px;margin-bottom:14px;color:#fff;font-weight:800}
+.login-hero p{color:#c6dde4;font-size:15px;max-width:680px;margin:0 auto;line-height:1.95}
+.login-panel{padding:0;width:100%;max-width:470px;display:block}
+.login-box{width:100%;max-width:470px;background:#fff;border-radius:20px;padding:28px 28px 22px;box-shadow:0 26px 70px rgba(2,18,24,.45)}
+.login-legal{display:none}
+@media(max-width:900px){.login-hero h1{font-size:32px}.login-hero p{font-size:13.5px}}
+@media(max-width:600px){#loginScreen{padding:26px 16px;gap:18px}.login-hero h1{font-size:26px}.login-box{padding:22px 18px}}
+
+
+/* ==== full-stack additions ==== */
+.stack-btns{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.stack-btns .btn{justify-content:center;white-space:normal;line-height:1.35;font-size:11.5px;padding:6px 10px}
+.file-btn{position:relative;overflow:hidden;cursor:pointer;display:inline-flex}
+.file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.members-grid{display:flex;flex-direction:column;gap:10px}
+.member-card{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:#fff}
+.member-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--teal-soft);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--teal);font-size:20px;flex:0 0 auto;border:2px solid var(--line);overflow:hidden}
+.member-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.member-info{flex:1;min-width:160px}
+.member-info b{display:block;font-size:14px}
+.member-info .em{font-size:12px;color:var(--muted);direction:ltr;text-align:right}
+.member-team{font-size:11.5px;color:var(--muted);margin-top:2px}
+.subteam-members{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.subteam-members .chip{font-size:11px}
+.avatar{overflow:hidden}
+.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.rate-live{font-variant-numeric:tabular-nums}
+.member-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+@media (max-width:640px){.member-card{flex-wrap:wrap}.member-actions{flex-direction:row;align-items:center;width:100%;justify-content:flex-end}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#mainContent">تخطَّ إلى المحتوى الرئيسي</a>
+
+<!-- ==========================================================================
+     2) شاشة الدخول.
+     لا تحتوي كلمات مرور أو أسراراً داخل الملف، التزاماً بتوصية التقرير.
+     الدخول الحقيقي يجب أن يتم عبر خادم مركزي مع HTTPS وجلسات وصلاحيات.
+     ========================================================================== -->
+<div id="loginScreen">
+  <section class="login-brand" aria-label="تعريف النظام">
+    <div class="brand-lockup">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-2.9 8.2-7 9.5-4.1-1.3-7-5.1-7-9.5V6l7-3z"/><path d="M7.4 12.2h2.1l1.2-2.7 1.7 4.9 1.3-2.2h2.9"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">جامعة دمشق</div>
+        <div class="brand-sub">لوحة تحكم فريق التدقيق السريري Clinical Audit Team Dashboard</div>
+      </div>
+    </div>
+    <div class="login-hero">
+      <h1>التدقيق السريري من القياس إلى التحسين</h1>
+      <p>لوحة تحكم فريق التدقيق السريري Clinical Audit Team Dashboard — منصة واحدة تجمع مشاريع التدقيق والمعايير القابلة للقياس ونتائج الجولات وتحليل الأسباب الجذرية والتوصيات الموجهة للجهات المعنية ثم إعادة التقييم وفق دورة التدقيق السريري المعتمدة.</p>
+    </div>
+  </section>
+
+  <section class="login-panel">
+    <div class="login-box">
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-tab="login">تسجيل الدخول</button>
+        <button type="button" class="auth-tab" data-auth-tab="signup">إنشاء حساب</button>
+      </div>
+      <div id="authMsg" class="auth-msg"></div>
+
+      <form id="loginForm" class="auth-form">
+        <h2>تسجيل الدخول</h2>
+        <p class="lead">أدخل بريدك الإلكتروني وكلمة المرور للوصول إلى لوحة الفريق.</p>
+        <div class="field"><label for="loginEmail">البريد الإلكتروني</label><input class="input" id="loginEmail" type="email" required autocomplete="email" placeholder="name@example.com"></div>
+        <div class="field"><label for="loginPass">كلمة المرور</label><input class="input" id="loginPass" type="password" required autocomplete="current-password"></div>
+        <button class="btn btn-primary" type="submit">دخول إلى اللوحة</button>
+      </form>
+
+      <form id="signupForm" class="auth-form hide">
+        <h2>إنشاء حساب</h2>
+        <p class="lead">التسجيل متاح لأعضاء فريق التدقيق السريري بكود الدعوة.</p>
+        <div class="field"><label for="suName">الاسم الثلاثي</label><input class="input" id="suName" type="text" required placeholder="الاسم الثلاثي"></div>
+        <div class="field"><label for="suAvatar">الصورة الشخصية (اختياري)</label>
+          <label class="btn btn-soft file-btn">رفع صورة<input type="file" id="suAvatar" accept="image/png,image/jpeg,image/webp"></label>
+          <div class="hint">تُعرض صورتك أعلى اسمك في صفحة أعضاء الفريق.</div>
+        </div>
+        <div class="field"><label for="suEmail">البريد الإلكتروني</label><input class="input" id="suEmail" type="email" required autocomplete="email" placeholder="name@example.com"></div>
+        <div class="field"><label for="suPass">كلمة المرور</label><input class="input" id="suPass" type="password" required autocomplete="new-password"><div class="hint" id="suPassHint">8 أحرف على الأقل، وتشمل حرفاً ورقماً ورمزاً واحداً على الأقل.</div></div>
+        <div class="field"><label for="suInvite">كود الدعوة</label><input class="input" id="suInvite" type="text" required placeholder="كود الدعوة"><div class="hint">اطلبه من مسؤول فريق التدقيق السريري.</div></div>
+        <button class="btn btn-primary" type="submit">إنشاء الحساب</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<!-- ==========================================================================
+     الهيكل الرئيسي للتطبيق
+     ========================================================================== -->
+<div id="appShell" class="hide">
+  <aside class="sidebar" id="sidebar" aria-label="القائمة الرئيسية">
+    <div class="sb-brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-2.9 8.2-7 9.5-4.1-1.3-7-5.1-7-9.5V6l7-3z"/><path d="M7.4 12.2h2.1l1.2-2.7 1.7 4.9 1.3-2.2h2.9"/></svg>
+      </div>
+      <div><b>فريق التدقيق السريري</b><span>جامعة دمشق</span></div>
+    </div>
+    <nav class="sb-nav" id="sbNav"></nav>
+    <div class="sb-foot">
+      <div class="sb-user">
+        <div class="avatar" id="sbAvatar">م</div>
+        <div><b id="sbUserName">مدير النظام</b><span id="sbUserRole">مسؤول الجودة</span></div>
+      </div>
+      <div>جامعة دمشق — Clinical Audit-Syria</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-ghost btn-icon menu-btn" id="menuBtn" aria-label="فتح القائمة">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div>
+        <div class="tb-title" id="tbTitle">نظرة عامة</div>
+        <div class="tb-crumb" id="tbCrumb">الرئيسية / نظرة عامة</div>
+      </div>
+      <div class="tb-search">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="globalSearch" type="search" placeholder="ابحث برقم التدقيق أو القسم أو قائد الفريق…" aria-label="بحث عام">
+      </div>
+      <div class="tb-date">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+        <span id="todayLabel">—</span>
+      </div>
+      <div class="role-chip"><span class="dot"></span><span id="roleChipLabel">مدير النظام</span></div>
+      <button class="btn btn-ghost btn-icon" id="logoutBtn" aria-label="تسجيل الخروج" title="تسجيل الخروج">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </header>
+
+    <main class="content" id="mainContent"></main>
+
+    <footer class="footer">
+      <span><b>لوحة التدقيق السريري</b> — جامعة دمشق، دمشق.</span>
+      <span>فريق التدقيق السريري · لا تُدخل معرفات مرضى</span>
+    </footer>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast-wrap" id="toastRoot" aria-live="polite"></div>
+
+<script>
+/* ==========================================================================
+   3) طبقة البيانات (JS)
+   --------------------------------------------------------------------------
+   هذا هو القسم الوحيد الذي يُستبدل عند الربط ببيانات حقيقية.
+   - CONFIG : إعدادات المؤسسة والحدود الدنيا للتصنيف.
+   - MOCK_DB:  (7 مشاريع) تحاكي البنية الحقيقية.
+   لاستبدالها: استبدل MOCK_DB بنداء API أو ملف JSON بنفس المفاتيح،
+   أو اتركها وعدّل السجلات من داخل الواجهة (تُحفظ في localStorage).
+   ========================================================================== */
+
+/* هل هذا الملف نسخة فارغة؟ (true) أم نسخة عرض ببيانات؟ (false) */
+const IS_BLANK_TEMPLATE = true;
+
+const CONFIG = {
+  institution: {
+    name: "جامعة دمشق",
+    city: "دمشق",
+    unit: "وحدة التدقيق السريري ومكتب الجودة",
+    version: "1.0",
+    systemOwner: "مكتب الجودة وسلامة المرضى"
+  },
+  /* حدود التصنيف: التقرير لم يحدد أرقاماً صريحة، لذا اعتُمدت هنا كقيم تشغيلية
+     مؤقتة (90% ممتاز / 75% مقبول) بانتظار اعتمادها رسمياً من مكتب الجودة.
+     غيّرها من هنا فقط لتطبيق الحدود المعتمدة لاحقاً. */
+  thresholds: { excellent: 90, acceptable: 75 },
+  retentionYears: 5,
+  maxAttachmentMB: 5,
+  drive: { account: "ClinicalAudit.Syria@gmail.com", uploadEndpoint: "" },
+  allowedAttachmentTypes: ["pdf", "docx", "xlsx", "png", "jpg", "jpeg"],
+  /* المراحل الإحدى عشرة بترتيبها الثابت كما ورد في التقرير (محور التنظيم) */
+  stages: [
+    "تعريف المشروع",
+    "النطاق",
+    "المعايير",
+    "خطة جمع البيانات والعينة",
+    "النتائج والتحليل",
+    "التوصيات والمتابعة",
+    "إعادة التقييم"
+  ],
+  projectStates: ["مسودة", "جمع بيانات", "تحليل بيانات", "معتمد", "توصيات ومتابعة", "مكتمل", "إعادة تقييم", "مجمّد"],
+  roles: {
+    member: { label: "عضو فريق التدقيق السريري", short: "عضو فريق", canCreate: true, canEdit: true, canApprove: true, canArchive: true, canExport: true, canManageUsers: true }
+  }
+};
+
+/* --------------------------------------------------------------------------
+   البيانات — استبدلها ببيانات حقيقية مجهولة الهوية فقط.
+   لا تُدخل أسماء مرضى أو أرقام ملفات أو صوراً تعريفية.
+   -------------------------------------------------------------------------- */
+
+
+const MOCK_DB = {
+  users: [],
+  departments: [],
+  projects: []
+};
+
+/* --------------------------------------------------------------------------
+   أدوات مساعدة عامة
+   -------------------------------------------------------------------------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const round1 = (n) => Math.round(n * 10) / 10;
+const fmtPct = (n) => (n == null || isNaN(n) ? "—" : round1(n).toLocaleString("en-US") + "%");
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const daysDiff = (iso) => {
+  if (!iso) return null;
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return null;
+  const t = new Date(todayISO() + "T00:00:00");
+  return Math.round((d - t) / 86400000);
+};
+const isOverdue = (iso) => { const d = daysDiff(iso); return d != null && d < 0; };
+const fmtDate = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString("ar-SY-u-nu-latn", { year: "numeric", month: "short", day: "numeric" });
+};
+const fmtDateTime = (s) => s || "—";
+
+/* التخزين المحلي: يحفظ نسخة معدّلة من البيانات داخل المتصفح.
+   ملاحظة أمنية: هذا تخزين عرضي فقط، وليس بديلاً عن قاعدة بيانات مؤمّنة. */
+/* قاعدة البيانات تُحمَّل من الخادم عبر /api/state. */
+let DB = { users: [], departments: [], projects: [], subteams: [], logs: [] };
+let SERVER = { expiry: null, drive: { account: "ClinicalAudit.Syria@gmail.com", root: "clinical audit data" } };
+
+/* غلاف fetch موحّد: عند انتهاء الجلسة (401) يعود إلى شاشة الدخول. */
+const API_BASE = ""; /* same-origin: Netlify proxies /api/* to the backend */
+async function api(method, url, body) {
+  const opts = { method, credentials: "include", headers: {} };
+  if (body instanceof FormData) { opts.body = body; }
+  else if (body !== undefined) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
+  const res = await fetch(API_BASE + url, opts);
+  if (res.status === 401) {
+    let code = "unauthenticated";
+    try { const j = await res.json(); code = j.error || code; } catch (e) {}
+    handleSessionEnd(code === "session_expired");
+    throw new Error(code === "session_expired" ? "انتهت الجلسة، يرجى تسجيل الدخول مجدداً." : "يجب تسجيل الدخول.");
+  }
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error(data.message || data.error || ("HTTP " + res.status));
+  return data;
+}
+function handleSessionEnd(expired) {
+  state.role = null; state.user = null; state.wizard = null;
+  const app = $("#appShell"), login = $("#loginScreen");
+  if (app) app.classList.add("hide");
+  if (login) login.classList.remove("hide");
+  const mr = $("#modalRoot"); if (mr) mr.innerHTML = "";
+  showAuthTab("login");
+  if (expired) authMsg("انتهت جلستك لأسباب أمنية. يرجى تسجيل الدخول من جديد.");
+}
+function saveDB() { persistProjects(); }
+async function persistProjects() {
+  try {
+    const r = await api("PUT", "/api/projects", { projects: DB.projects });
+    if (r && Array.isArray(r.projects)) DB.projects = r.projects;
+  } catch (e) { toast("تعذّر حفظ المشاريع على الخادم: " + e.message, "bad"); }
+}
+async function refreshState() {
+  const st = await api("GET", "/api/state");
+  DB.users = st.users || [];
+  DB.subteams = st.subteams || [];
+  DB.projects = st.projects || [];
+  DB.logs = st.logs || [];
+  DB.departments = Array.from(new Set(DB.projects.map((p) => p.dept).filter(Boolean)));
+  SERVER = { expiry: st.expiry, drive: st.drive || SERVER.drive };
+  state.user = st.me;
+  state.role = st.me.role === "creator" ? "creator" : "member";
+  return st;
+}
+
+/* حالة الواجهة (لا تُحفظ) */
+let state = {
+  role: null,
+  user: null,
+  view: "dashboard",
+  projectId: null,
+  detailTab: "overview",
+  filters: { q: "", dept: "", status: "", state: "", sort: "start", dir: "desc" },
+  wizard: null,
+  dashSort: "start",
+  lastSaved: null
+};
+
+const CREATOR_EMAIL = "ahmedalbeiruti1@gmail.com";
+function creatorCard() {
+  const users = DB.users;
+  return `<div class="card card-pad mt-16 creator-card">
+    <div class="card-head"><div><div class="card-title">قائمة منشئي الحسابات</div><div class="card-sub">تظهر لحساب منشئ الموقع فقط · ${users.length} حساباً</div></div></div>
+    <div>${users.length ? users.map((u) => `<div class="creator-row"><span><b>${esc(u.name)}</b></span><span class="muted">${esc(u.email)}</span><span class="muted">${u.createdAt ? fmtDate(String(u.createdAt).slice(0, 10)) : "—"}</span></div>`).join("") : `<div class="small muted">لا حسابات مسجّلة بعد.</div>`}</div>
+  </div>`;
+}
+
+/* --------------------------------------------------------------------------
+   الحسابات: نسب الالتزام تُحسب آلياً من البسط/المقام (توصية التقرير)
+   -------------------------------------------------------------------------- */
+const projectById = (id) => DB.projects.find((p) => p.id === id);
+const userById = (id) => DB.users.find((u) => u.id === id) || { name: "—", title: "", role: "viewer" };
+const latestRound = (p) => (p.rounds && p.rounds.length ? p.rounds[p.rounds.length - 1] : null);
+const baselineRound = (p) => (p.rounds && p.rounds.length ? p.rounds[0] : null);
+
+function critRate(p, critId, round) {
+  const r = round || latestRound(p);
+  if (!r || !r.results || !r.results[critId]) return null;
+  const x = r.results[critId];
+  const den = (Number(x.app) || 0) - (Number(x.undoc) || 0);
+  if (den <= 0) return null;
+  return (Number(x.met) || 0) / den * 100;
+}
+function roundTotals(p, round) {
+  let met = 0, app = 0, undoc = 0;
+  (p.criteria || []).forEach((c) => {
+    const x = round && round.results ? round.results[c.id] : null;
+    if (!x) return;
+    met += Number(x.met) || 0;
+    app += Number(x.app) || 0;
+    undoc += Number(x.undoc) || 0;
+  });
+  const den = app - undoc;
+  return { met, app, undoc, rate: den > 0 ? met / den * 100 : null };
+}
+function projectCompliance(p) {
+  const r = latestRound(p);
+  if (!r) return null;
+  return roundTotals(p, r).rate;
+}
+function projectDelta(p) {
+  if (!p.rounds || p.rounds.length < 2) return null;
+  const a = roundTotals(p, p.rounds[0]).rate;
+  const b = roundTotals(p, latestRound(p)).rate;
+  if (a == null || b == null) return null;
+  return b - a;
+}
+function statusOf(rate) {
+  if (rate == null) return "none";
+  if (rate >= CONFIG.thresholds.excellent) return "excellent";
+  if (rate >= CONFIG.thresholds.acceptable) return "acceptable";
+  return "improve";
+}
+const STATUS_LABEL = { excellent: "ممتاز", acceptable: "مقبول", improve: "يحتاج تحسين", none: "غير مقيس" };
+const STATUS_SYM = { excellent: "●", acceptable: "◐", improve: "▲", none: "○" };
+function statusBadge(rate, extra) {
+  const s = statusOf(rate);
+  return `<span class="badge st-${s}">${STATUS_SYM[s]} ${STATUS_LABEL[s]}${extra ? " · " + esc(extra) : ""}</span>`;
+}
+function rateBadge(rate) {
+  const st = statusOf(rate);
+  return `<span class="badge st-${st}">${STATUS_SYM[st]} ${STATUS_LABEL[st]}</span>`;
+}
+function stateBadge(st) {
+  const map = { "مسودة": "st-neutral", "قيد مراجعة": "st-info", "معتمد": "st-teal", "جمع بيانات": "st-info", "تحليل": "st-info", "خطة تحسين": "st-acceptable", "بانتظار إعادة التدقيق": "st-acceptable", "مغلق": "st-excellent" };
+  return `<span class="badge ${map[st] || "st-neutral"}">${esc(st)}</span>`;
+}
+function actionBadge(st) {
+  const map = { "مغلق": "st-excellent", "قيد التنفيذ": "st-info", "مفتوح": "st-neutral", "متأخر": "st-improve" };
+  return `<span class="badge ${map[st] || "st-neutral"}">${esc(st)}</span>`;
+}
+function severityBadge(s) {
+  const map = { "عالية": "sev-high", "متوسطة": "sev-med", "منخفضة": "sev-low" };
+  return `<span class="badge ${map[s] || "st-neutral"}">خطورة ${esc(s || "—")}</span>`;
+}
+const stageName = (n) => CONFIG.stages[Math.max(0, Math.min(6, (n || 1) - 1))];
+
+const activeProjects = () => DB.projects.filter((p) => p.state !== "مغلق");
+
+function kpis() {
+  const ps = DB.projects;
+  const active = activeProjects();
+  const rates = active.map(projectCompliance).filter((r) => r != null);
+  const avg = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null;
+  const needImprove = active.filter((p) => statusOf(projectCompliance(p)) === "improve").length;
+  return {
+    total: ps.length, active: active.length, avg, needImprove,
+    criteria: ps.reduce((n, p) => n + (p.criteria ? p.criteria.length : 0), 0)
+  };
+}
+function can(action) {
+  if (state.role === "creator") return true;
+  const r = CONFIG.roles[state.role];
+  if (!r) return false;
+  return !!r[action];
+}
+const currentUserLabel = () => (state.user ? state.user.name : "—");
+
+/* --------------------------------------------------------------------------
+   الأيقونات (SVG مضمّنة، بلا مكتبات خارجية)
+   -------------------------------------------------------------------------- */
+const ICONS = {
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  send: '<path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-8-8-4z"/>',
+  refresh: '<path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 4v5h-5"/>',
+  chart: '<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>',
+  users: '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c.7-3.6 3.3-5.6 6.5-5.6s5.8 2 6.5 5.6"/><path d="M17 5.5a3 3 0 010 5.6M18 20c-.2-1.6-.6-3-1.4-4.1"/>',
+  book: '<path d="M4 4.5A2.5 2.5 0 016.5 2H20v18H6.5A2.5 2.5 0 004 22z"/><path d="M4 17.5h16"/>',
+  shield: '<path d="M12 3l7 3v5c0 4.4-2.9 8.2-7 9.5-4.1-1.3-7-5.1-7-9.5V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  alert: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>',
+  check: '<path d="M20 6L9 17l-5-5"/>',
+  x: '<path d="M18 6L6 18M6 6l12 12"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  arrow: '<path d="M15 18l-6-6 6-6"/>',
+  arrowL: '<path d="M9 18l6-6-6-6"/>',
+  file: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/>',
+  download: '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/>',
+  print: '<path d="M6 9V2h12v7"/><rect x="2" y="9" width="20" height="8" rx="2"/><path d="M6 17h12v5H6z"/>',
+  edit: '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 013 3L12 15l-4 1 1-4z"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>',
+  layers: '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5M3 17l9 5 9-5"/>',
+  lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>',
+  upload: '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 8l5-5 5 5M12 3v12"/>',
+  save: '<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+  logout: '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/>',
+  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/>',
+  activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  eye: '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/>',
+  archive: '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v12h14V8M10 12h4"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 015.5.7c0 1.9-2.7 2.1-2.7 4M12 17h.01"/>',
+  pin: '<path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  flag: '<path d="M4 21V4h11l-1 4h6l-2 5 2 5H4"/>'
+};
+function icon(name, cls = "") {
+  return `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ICONS.info}</svg>`;
+}
+
+/* ==========================================================================
+   4) منطق العرض والتفاعل (JS)
+   --------------------------------------------------------------------------
+   عرض الصفحات: لوحة المؤشرات، المشاريع، التفاصيل، التوصيات والمتابعة، التقارير،
+   الدليل، الصلاحيات، سجل الأحداث. كل النصوص عربية وRTL.
+   ========================================================================== */
+
+const NAV = [
+  { id: "dashboard", label: "نظرة عامة", icon: "grid" },
+  { id: "projects", label: "مشاريع التدقيق", icon: "list" },
+  { id: "new", label: "مشروع جديد", icon: "plus", need: "canCreate" },
+  { id: "team", label: "أعضاء الفريق", icon: "users" },
+  { id: "reports", label: "التقارير والمؤشرات", icon: "chart" },
+  { id: "log", label: "سجل الأحداث", icon: "clock" },
+  { id: "help", label: "الدليل والمصطلحات", icon: "book" }
+];
+
+function renderShell() {
+  const u = state.user;
+  $("#sbNav").innerHTML = NAV.filter((n) => !n.need || can(n.need)).map((n) => `
+    <button class="sb-item ${state.view === n.id || (n.id === "projects" && state.view === "project") ? "active" : ""}" data-nav="${n.id}">
+      ${icon(n.icon)}<span>${n.label}</span>
+    </button>`).join("");
+  $("#sbUserName").textContent = u.name;
+  $("#sbUserRole").textContent = u.email || CONFIG.roles[state.role].label;
+  $("#sbAvatar").textContent = u.name.replace(/^د\.\s*|^م\.\s*/, "").charAt(0);
+  $("#roleChipLabel").textContent = u.name;
+  $("#todayLabel").textContent = new Date().toLocaleDateString("ar-SY-u-nu-latn", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const titles = {
+    dashboard: ["نظرة عامة", "الرئيسية / نظرة عامة"],
+    projects: ["مشاريع التدقيق", "الرئيسية / المشاريع"],
+    project: ["تفاصيل المشروع", "الرئيسية / المشاريع / التفاصيل"],
+    new: ["مشروع تدقيق جديد", "الرئيسية / مشروع جديد"],
+    team: ["أعضاء الفريق", "الرئيسية / أعضاء الفريق"],
+    reports: ["التقارير والمؤشرات", "الرئيسية / التقارير"],
+    log: ["سجل الأحداث", "الرئيسية / سجل الأحداث"],
+    help: ["الدليل والمصطلحات", "الرئيسية / الدليل"],
+    help: ["الدليل والمصطلحات", "الرئيسية / الدليل"]
+  };
+  const t = titles[state.view] || titles.dashboard;
+  $("#tbTitle").textContent = t[0];
+  $("#tbCrumb").textContent = t[1];
+  $("#mainContent").innerHTML = renderView();
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
+
+function renderView() {
+  switch (state.view) {
+    case "dashboard": return viewDashboard();
+    case "projects": return viewProjects();
+    case "project": return viewProject(state.projectId);
+    case "new": return viewWizard();
+    case "team": return viewTeam();
+    case "reports": return viewReports();
+    case "log": return viewLog();
+    case "help": return viewHelp();
+    default: return viewDashboard();
+  }
+}
+
+const pageHead = (title, sub, actions = "") => `
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">${title}</h1>
+      <p class="page-sub">${sub}</p>
+    </div>
+    <div class="page-actions">${actions}</div>
+  </div>`;
+
+
+/* --------------------------------------------------------------------------
+   لوحة المؤشرات
+   -------------------------------------------------------------------------- */
+function viewDashboard() {
+  const k = kpis();
+  const active = activeProjects();
+  const counts = { excellent: 0, acceptable: 0, improve: 0, none: 0 };
+  active.forEach((p) => { counts[statusOf(projectCompliance(p))]++; });
+  const recent = [...DB.projects].sort((a, b) => state.dashSort === "done"
+    ? (projectCompliance(b) || -1) - (projectCompliance(a) || -1)
+    : (b.startDate || "").localeCompare(a.startDate || "")).slice(0, 5);
+
+  return `
+  ${k.total === 0 ? `<div class="card card-pad mb-16" style="border-right:4px solid var(--teal)">
+    <div class="card-title">مرحبًا بك في لوحة التدقيق السريري</div>
+    <div class="small muted" style="line-height:2;margin-top:6px">
+      لا توجد مشاريع تدقيق مسجّلة بعد، لذلك تظهر المؤشرات أصفارًا. ابدأ بإنشاء أول مشروع من زر «مشروع تدقيق جديد» أعلى الصفحة،
+      ويمكنك حفظ المشروع كمسودة في أي مرحلة ثم استكماله لاحقًا.
+    </div>
+  </div>` : ""}
+  ${pageHead("نظرة عامة",
+    `جامعة دمشق — دمشق · ${active.length} مشروعاً قيد العمل`,
+    `${can("canCreate") ? `<button class="btn btn-primary" data-act="new">${icon("plus")} مشروع تدقيق جديد</button>` : ""}
+     <button class="btn btn-ghost btn-icon print-ico" data-act="print" aria-label="طباعة" title="طباعة">${icon("print")}</button>`)}
+  <div class="grid grid-4">
+    <div class="card kpi">
+      <div class="kpi-top"><span class="kpi-label">مشاريع قيد التنفيذ</span><span class="kpi-ico">${icon("layers")}</span></div>
+      <div class="kpi-val num">${k.active}<small>مشروع</small></div>
+      <div class="kpi-foot">${icon("list")} من أصل ${k.total} مشروعاً مسجّلاً</div>
+    </div>
+    <div class="card kpi ${k.avg != null && k.avg >= CONFIG.thresholds.excellent ? "good" : k.avg != null && k.avg < CONFIG.thresholds.acceptable ? "bad" : "warn"}">
+      <div class="kpi-top"><span class="kpi-label">متوسط نسبة الالتزام</span><span class="kpi-ico">${icon("target")}</span></div>
+      <div class="kpi-val num">${fmtPct(k.avg)}</div>
+      <div class="kpi-foot">${icon("info")} عبر المشاريع النشطة</div>
+    </div>
+    <div class="card kpi bad">
+      <div class="kpi-top"><span class="kpi-label">مشاريع تحتاج تحسيناً</span><span class="kpi-ico">${icon("alert")}</span></div>
+      <div class="kpi-val num">${k.needImprove}<small>مشروع</small></div>
+      <div class="kpi-foot">${icon("flag")} نسبة الالتزام أقل من ${CONFIG.thresholds.acceptable}%</div>
+    </div>
+      </div>
+
+  <div class="grid grid-2 mt-16">
+    <div class="card card-pad">
+      <div class="card-head"><div><div class="card-title">توزيع الحالات</div><div class="card-sub">حسب نسبة الالتزام الحالية</div></div></div>
+      ${donutHTML(k.avg, counts, active.length)}
+    </div>
+
+    <div class="card card-pad">
+      <div class="card-head"><div><div class="card-title">الالتزام لكل مشروع</div><div class="card-sub">النسبة الحالية مقابل الحد المقبول ${CONFIG.thresholds.acceptable}%</div></div></div>
+      <div class="bars">
+        ${active.slice(0, 6).map((p) => {
+          const r = projectCompliance(p);
+          const s = statusOf(r);
+          return `<div class="bar-row">
+            <span title="${esc(p.title)}">${esc(p.code)}</span>
+            <div class="bar-track"><div class="bar-fill ${s === "excellent" ? "good" : s === "acceptable" ? "warn" : "bad"}" style="width:${r == null ? 0 : Math.max(2, r)}%"></div></div>
+            <span class="bar-val num">${fmtPct(r)}</span>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="divider"></div>
+      <div class="small muted">${icon("info")} الأعمدة تبدأ من الصفر؛ لا تُقارن المشاريع ذات أحجام عينات مختلفة مقارنة إحصائية.</div>
+    </div>
+
+    </div>
+
+  <div class="card mt-16">
+    <div class="card-pad" style="padding-bottom:0">
+      <div class="card-head"><div><div class="card-title">أحدث مشاريع التدقيق</div><div class="card-sub">مرتبة حسب ${state.dashSort === "done" ? "درجة الإنجاز" : "تاريخ البدء"}</div></div>
+        <div class="flex">
+          <select class="select" id="dashSort" aria-label="ترتيب المشاريع" style="max-width:190px;min-height:36px">
+            <option value="start" ${state.dashSort === "start" ? "selected" : ""}>ترتيب حسب تاريخ البدء</option>
+            <option value="done" ${state.dashSort === "done" ? "selected" : ""}>ترتيب حسب درجة الإنجاز</option>
+          </select>
+          <button class="link-btn" data-nav="projects">كل المشاريع ${icon("arrow")}</button>
+        </div></div>
+    </div>
+    <div class="table-wrap" style="border:0;border-radius:0 0 18px 18px">
+      ${projectsTable(recent, true)}
+    </div>
+  </div>
+  ${state.user && state.user.email === CREATOR_EMAIL ? creatorCard() : ""}
+  <div class="last-updated">آخر تحديث: ${fmtDate(todayISO())}</div>`;
+}
+
+function donutHTML(avg, counts, total) {
+  const r = 70, c = 2 * Math.PI * r;
+  const pct = avg == null ? 0 : Math.max(0, Math.min(100, avg));
+  const segs = [
+    { key: "excellent", color: "#147a3d", label: "ممتاز", range: "≥ 90%" },
+    { key: "acceptable", color: "#d38a1c", label: "مقبول", range: "75–89%" },
+    { key: "improve", color: "#cf3b3b", label: "يحتاج تحسين", range: "< 75%" },
+    { key: "none", color: "#9db6bf", label: "غير مقيس", range: "" }
+  ];
+  return `<div class="donut-box">
+    <div class="donut">
+      <svg viewBox="0 0 168 168">
+        <circle class="track" cx="84" cy="84" r="${r}"></circle>
+        <circle class="bar" cx="84" cy="84" r="${r}" stroke-dasharray="${(c * pct / 100).toFixed(1)} ${c.toFixed(1)}" style="stroke:${pct >= 90 ? "#147a3d" : pct >= 75 ? "#d38a1c" : "#cf3b3b"}"></circle>
+      </svg>
+      <div class="donut-center"><b class="num">${fmtPct(avg)}</b><span>متوسط الالتزام</span></div>
+    </div>
+    <div class="legend">
+      ${segs.map((s) => `<div class="legend-row"><span class="legend-dot" style="background:${s.color}"></span>${s.label}${s.range ? `<span class="range-tag">${s.range}</span>` : ""}<b class="num">${counts[s.key]}</b></div>`).join("")}
+      <div class="divider" style="margin:6px 0"></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#0f6b7d"></span>إجمالي المشاريع النشطة<b class="num">${total}</b></div>
+    </div>
+  </div>`;
+}
+
+/* --------------------------------------------------------------------------
+   قائمة المشاريع
+   -------------------------------------------------------------------------- */
+function filteredProjects() {
+  const f = state.filters;
+  const list = DB.projects.filter((p) => {
+    const q = f.q.trim().toLowerCase();
+    const hay = [p.code, p.title, p.dept, (p.leader || userById(p.owner).name), p.state, stageName(p.stage), p.teamNo].join(" ").toLowerCase();
+    if (q && !hay.includes(q)) return false;
+    if (f.dept && !String(p.dept || "").toLowerCase().includes(f.dept.trim().toLowerCase())) return false;
+    if (f.state && p.state !== f.state) return false;
+    if (f.status && statusOf(projectCompliance(p)) !== f.status) return false;
+    return true;
+  });
+  const dir = f.dir === "asc" ? 1 : -1;
+  const key = f.sort || "start";
+  const val = (p) => {
+    if (key === "compliance") { const r = projectCompliance(p); return r == null ? -1 : r; }
+    if (key === "completion") return Number(p.stage) || 0;
+    if (key === "teamNo") return Number(p.teamNo) || 0;
+    return p.startDate || "";
+  };
+  list.sort((a, b) => {
+    const va = val(a), vb = val(b);
+    if (typeof va === "string") return dir * String(va).localeCompare(String(vb));
+    return dir * (va - vb);
+  });
+  return list;
+}
+
+function viewProjects() {
+  const list = filteredProjects();
+  return `
+  ${pageHead("مشاريع التدقيق السريري", `${DB.projects.length} مشروعاً مسجّلاً · ${list.length} مطابقاً للتصفية`,
+    `${can("canCreate") ? `<button class="btn btn-primary" data-act="new">${icon("plus")} مشروع جديد</button>` : ""}
+     <button class="btn btn-ghost" data-act="export">${icon("download")} تصدير ملخص</button>`)}
+  <div class="card card-pad">
+    <div class="toolbar">
+      <div class="search-box">${icon("search")}<input id="fltQ" type="search" aria-label="بحث في مشاريع التدقيق" placeholder="ابحث برقم التدقيق أو القسم أو قائد الفريق…" value="${esc(state.filters.q)}"></div>
+      <div class="search-box" style="max-width:220px">${icon("search")}<input id="fltDept" type="search" aria-label="بحث في الأقسام" placeholder="ابحث باسم القسم…" value="${esc(state.filters.dept)}"></div>
+      <select class="select" id="fltState" aria-label="تصفية حسب الحالة" style="max-width:210px">
+        <option value="">كل الحالات</option>
+        ${CONFIG.projectStates.map((s) => `<option ${state.filters.state === s ? "selected" : ""}>${esc(s)}</option>`).join("")}
+      </select>
+      <select class="select" id="fltSort" aria-label="ترتيب حسب" style="max-width:190px">
+        <option value="start" ${state.filters.sort === "start" ? "selected" : ""}>ترتيب: تاريخ البدء</option>
+        <option value="completion" ${state.filters.sort === "completion" ? "selected" : ""}>ترتيب: درجة الإنجاز</option>
+        <option value="compliance" ${state.filters.sort === "compliance" ? "selected" : ""}>ترتيب: نسبة الالتزام</option>
+        <option value="teamNo" ${state.filters.sort === "teamNo" ? "selected" : ""}>ترتيب: رقم الفريق</option>
+      </select>
+      <select class="select" id="fltDir" aria-label="اتجاه الترتيب" style="max-width:130px">
+        <option value="desc" ${state.filters.dir === "desc" ? "selected" : ""}>تنازلي</option>
+        <option value="asc" ${state.filters.dir === "asc" ? "selected" : ""}>تصاعدي</option>
+      </select>
+      <div class="chips">
+        ${[["", "الكل"], ["excellent", "ممتاز"], ["acceptable", "مقبول"], ["improve", "يحتاج تحسين"]].map(([v, l]) =>
+          `<button class="chip ${state.filters.status === v ? "active" : ""}" data-flt-status="${v}">${l}</button>`).join("")}
+      </div>
+    </div>
+    ${list.length ? `<div class="table-wrap">${projectsTable(list)}</div>` :
+      `<div class="empty">${icon("search")}<b>لا نتائج مطابقة</b>جرّب تعديل كلمة البحث أو إزالة بعض المرشّحات.</div>`}
+  </div>`;
+}
+
+function projectsTable(list, compact) {
+  return `<table class="responsive">
+    <thead><tr>
+      <th>التدقيق</th><th>رقم الفريق</th><th>القسم</th><th>المرحلة الحالية</th><th>قائد الفريق</th>
+      <th>الالتزام</th><th>الحالة</th><th>الإجراءات</th><th>Google Drive</th>
+    </tr></thead>
+    <tbody>
+    ${list.length ? list.map((p) => {
+      const r = projectCompliance(p);
+      const s = statusOf(r);
+      const teamNo = p.teamNo || String(p.code || "").split("-")[1] || "—";
+      return `<tr class="row-click" data-open="${p.id}">
+        <td data-label="التدقيق">
+          <div class="td-code">${esc(p.code)}</div>
+          <div class="td-title">${esc(p.title)}</div>
+          <div class="td-sub">${p.criteria.length} معياراً · عينة ${latestRound(p) ? latestRound(p).sample : "—"}</div>
+        </td>
+        <td data-label="رقم الفريق"><b class="num">${esc(teamNo)}</b></td>
+        <td data-label="القسم">${esc(p.dept)}</td>
+        <td data-label="المرحلة"><span class="badge stage-badge">${p.stage}/7 · ${esc(stageName(p.stage))}</span></td>
+        <td data-label="قائد الفريق">${esc((p.leader || userById(p.owner).name))}<div class="td-sub">${esc(userById(p.owner).title)}</div></td>
+        <td data-label="الالتزام">
+          <div class="mini-progress"><div class="mini-track"><div class="mini-fill ${s === "excellent" ? "good" : s === "acceptable" ? "warn" : "bad"}" style="width:${r == null ? 0 : Math.max(2, r)}%"></div></div><span class="mini-val num">${fmtPct(r)}</span></div>
+          <div class="td-sub">${STATUS_LABEL[s]}</div>
+        </td>
+        <td data-label="الحالة">${stateBadge(p.state)}</td>
+        <td data-label="الإجراءات"><button class="link-btn" data-open="${p.id}">فتح ${icon("arrow")}</button>
+          <button class="btn btn-ghost btn-icon btn-sm print-ico" data-act="print-project" data-id="${p.id}" title="طباعة" aria-label="طباعة">${icon("print")}</button></td>
+        <td data-label="Google Drive">
+          <div class="stack-btns">
+            <button class="btn btn-soft btn-sm" data-act="drive-report" data-id="${p.id}">${icon("upload")} رفع تقرير المشروع إلى Google Drive</button>
+            <button class="btn btn-ghost btn-sm" data-act="drive-all" data-id="${p.id}">${icon("upload")} رفع مستندات المشروع إلى Google Drive</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="9"><div class="empty">${icon("layers")}<b>لا توجد مشاريع تدقيق مسجّلة بعد</b>ابدأ بإنشاء أول مشروع من زر «مشروع تدقيق جديد».</div></td></tr>`}
+    </tbody>
+  </table>`;
+}
+
+/* --------------------------------------------------------------------------
+   تفاصيل المشروع
+   -------------------------------------------------------------------------- */
+function viewProject(id) {
+  const p = projectById(id);
+  if (!p) return `<div class="empty">${icon("alert")}<b>المشروع غير موجود</b>ربما أُرشف أو حُذف.</div>`;
+  const rate = projectCompliance(p);
+  const delta = projectDelta(p);
+  const tabs = [
+    ["overview", "نظرة عامة"], ["criteria", "المعايير والنتائج"], ["recommendations", "التوصيات والمتابعة"],
+    ["outcomes", "مؤشرات النتيجة"], ["attachments", "المرفقات"], ["events", "سجل الأحداث"], ["report", "التقرير"]
+  ];
+  return `
+  <div class="card detail-hero">
+    <div class="detail-top">
+      <div style="min-width:280px;flex:1">
+        <div class="flex wrap" style="gap:8px;margin-bottom:6px">
+          <span class="td-code" style="font-size:12px">${esc(p.code)}</span>
+          ${stateBadge(p.state)}
+          <span class="badge stage-badge">المرحلة ${p.stage}/7</span>
+        </div>
+        <h1 class="detail-title">${esc(p.title)}</h1>
+        <div class="detail-meta">
+          <span>${icon("pin")} ${esc(p.dept)}</span>
+          <span>${icon("users")} ${esc((p.leader || userById(p.owner).name))}</span>
+          <span>${icon("calendar")} ${fmtDate(p.startDate)} — ${p.endDate ? fmtDate(p.endDate) : "حتى إشعار آخر"}</span>
+          <span>${icon("target")} إعادة التدقيق: ${fmtDate(p.reauditDate)}</span>
+        </div>
+      </div>
+      <div class="detail-score">
+        <div>
+          <div class="score-num num" style="color:${rate == null ? "#5c7782" : rate >= 90 ? "#147a3d" : rate >= 75 ? "#a45a06" : "#b42323"}">${fmtPct(rate)}</div>
+          <div class="score-label">نسبة الالتزام الحالية<b>${STATUS_LABEL[statusOf(rate)]}</b></div>
+        </div>
+        <div style="border-right:1px solid var(--line);padding-right:14px">
+          <div class="score-label">التغيّر عن خط الأساس<b class="num" style="color:${delta == null ? "#5c7782" : delta >= 0 ? "#147a3d" : "#b42323"}">${delta == null ? "—" : (delta >= 0 ? "+" : "") + round1(delta) + " نقطة"}</b></div>
+          <div class="tiny muted mt-8">${p.rounds.length} جولة قياس</div>
+        </div>
+      </div>
+    </div>
+    <div class="stepper">
+      ${CONFIG.stages.map((s, i) => `<div class="step ${i + 1 < p.stage ? "done" : i + 1 === p.stage ? "current" : ""}"><span class="dot"></span>${i + 1}. ${s}</div>`).join("")}
+    </div>
+    <div class="between mt-16 wrap">
+      <div class="small muted">${icon("info")} المرحلة الحالية: <b>${esc(stageName(p.stage))}</b> · الخطوة التالية: <b>${p.stage < 7 ? esc(stageName(p.stage + 1)) : "مكتمل"}</b></div>
+      <div class="flex wrap">
+        ${can("canEdit") && p.state !== "مغلق" ? `<button class="btn btn-soft btn-sm" data-act="edit" data-id="${p.id}">${icon("edit")} تعديل</button>` : ""}
+        ${can("canEdit") && p.state === "مسودة" ? `<button class="btn btn-primary btn-sm" data-act="submit" data-id="${p.id}">${icon("send")} إرسال للمراجعة</button>` : ""}
+        ${can("canApprove") && p.state === "قيد مراجعة" ? `<button class="btn btn-primary btn-sm" data-act="approve" data-id="${p.id}">${icon("check")} اعتماد</button>` : ""}
+        ${can("canApprove") && p.state !== "مغلق" ? `<button class="btn btn-ghost btn-sm" data-act="archive" data-id="${p.id}">${icon("archive")} أرشفة</button>` : ""}
+        <button class="btn btn-ghost btn-sm" data-act="print">${icon("print")} طباعة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    ${tabs.map(([id2, l]) => `<button class="tab ${state.detailTab === id2 ? "active" : ""}" data-tab="${id2}">${l}</button>`).join("")}
+  </div>
+  <div id="detailBody">${detailTabHTML(p)}</div>`;
+}
+
+function detailTabHTML(p) {
+  switch (state.detailTab) {
+    case "criteria": return tabCriteria(p);
+    case "recommendations": return tabRecommendations(p);
+    case "outcomes": return tabOutcomes(p);
+    case "attachments": return tabAttachments(p);
+    case "events": return tabEvents(p);
+    case "report": return tabReport(p);
+    default: return tabOverview(p);
+  }
+}
+
+function tabOverview(p) {
+  const u = userById(p.owner);
+  return `<div class="grid grid-2">
+    <div class="card card-pad">
+      <div class="card-head"><div><div class="card-title">تعريف المشروع</div><div class="card-sub">الهدف والخلفية والنطاق</div></div></div>
+      <div class="info-grid" style="grid-template-columns:1fr">
+        <div class="info-item"><div class="lbl">الهدف من التدقيق</div><div class="val">${esc(p.objective)}</div></div>
+        <div class="info-item"><div class="lbl">الخلفية وأهمية الموضوع</div><div class="val">${esc(p.background)}</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="info-grid">
+        <div class="info-item"><div class="lbl">المستهدفون</div><div class="val">${esc(p.scope.population)}</div></div>
+        <div class="info-item"><div class="lbl">فترة جمع البيانات</div><div class="val">${esc(p.dcStart && p.dcEnd ? p.dcStart + " — " + p.dcEnd : (p.scope.period || "—"))}</div></div>
+        <div class="info-item"><div class="lbl">العينة</div><div class="val">${esc(p.scope.sample)}</div></div>
+        <div class="info-item"><div class="lbl">طريقة الجمع</div><div class="val">${esc(p.scope.method)}</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card card-pad">
+        <div class="card-head"><div><div class="card-title">الفريق والمسؤوليات</div><div class="card-sub">قائد الفريق وأعضاؤه</div></div></div>
+        <div class="attach-row">
+          <div class="attach-ico">${icon("users")}</div>
+          <div style="flex:1"><div class="attach-name">${esc(p.leader || "—")} — قائد الفريق</div><div class="attach-meta">${esc(p.dept || "")}</div></div>
+          <span class="badge st-teal">قائد الفريق</span>
+        </div>
+        ${(p.memberNames || []).filter(Boolean).map((m) => `<div class="attach-row"><div class="attach-ico">${icon("users")}</div>
+            <div style="flex:1"><div class="attach-name">${esc(m)}</div><div class="attach-meta">عضو فريق التدقيق</div></div>
+            <span class="badge st-neutral">عضو فريق</span></div>`).join("")}
+        <div class="divider"></div>
+        <div class="summary-line"><span>حالة الاعتماد</span><b>${p.approval && p.approval.by ? esc(userById(p.approval.by).name) + " · " + fmtDate(p.approval.date) : "بانتظار الاعتماد"}</b></div>
+        <div class="summary-line"><span>عدد المعايير</span><b class="num">${p.criteria.length}</b></div>
+        <div class="summary-line"><span>جولات القياس</span><b class="num">${p.rounds.length}</b></div>
+        <div class="summary-line"><span>التوصيات</span><b class="num">${(p.recommendations || []).length}</b></div>
+      </div>
+      ${p.notes ? `<div class="notice notice-blue mt-16">${icon("info")}<div><b>ملاحظة منهجية:</b> ${esc(p.notes)}</div></div>` : ""}
+    </div>
+  </div>`;
+}
+
+function tabCriteria(p) {
+  const r = latestRound(p);
+  return `<div class="card card-pad">
+    <div class="card-head">
+      <div><div class="card-title">المعايير والنتائج</div><div class="card-sub">كل معيار مستقل: النص وتعريف الاستيفاء والنسبة</div></div>
+      ${r ? `<span class="badge st-teal">${esc(r.label)} · ${fmtDate(r.date)}</span>` : ""}
+    </div>
+    <div class="table-wrap">
+      <table class="criteria-table">
+        <thead><tr><th>#</th><th>نص المعيار</th><th>البسط/المقام</th><th>النسبة</th><th>الحالة</th></tr></thead>
+        <tbody>
+        ${p.criteria.map((c) => {
+          const x = r && r.results ? r.results[c.id] : null;
+          const rate = critRate(p, c.id, r);
+          return `<tr>
+            <td><b class="num">${esc(c.no)}</b></td>
+            <td><div class="crit-text">${esc(c.text)}</div><div class="crit-src">تعريف الاستيفاء: ${esc(c.definition)}</div>
+                <div class="crit-src">${severityBadge(c.severity)}</div></td>
+            <td class="num">${x ? `${x.met} / ${x.app}` : "—"}${x && x.undoc ? `<div class="td-sub">غير موثق: ${x.undoc}</div>` : ""}</td>
+            <td><b class="num">${fmtPct(rate)}</b><div class="td-sub">الهدف ${c.target}%</div></td>
+            <td>${rateBadge(rate)}</td>
+          </tr>`;
+        }).join("")}
+        </tbody>
+      </table>
+    </div>
+    <div class="divider"></div>
+    <div class="grid grid-2">
+      <div class="summary-box">
+        <div class="summary-line"><span>إجمالي البسط (المستوفى)</span><b class="num">${roundTotals(p, r).met}</b></div>
+        <div class="summary-line"><span>إجمالي المقام (المنطبق)</span><b class="num">${roundTotals(p, r).app}</b></div>
+        <div class="summary-line"><span>غير موثق</span><b class="num">${roundTotals(p, r).undoc}</b></div>
+        <div class="summary-line"><span>النسبة المرجّحة</span><b class="num">${fmtPct(roundTotals(p, r).rate)}</b></div>
+      </div>
+      <div class="notice notice-blue" style="align-self:start">${icon("info")}<div><b>قاعدة الحساب:</b> نسبة الالتزام = عدد الحالات المستوفية ÷ عدد الحالات المنطبقة × 100. تُستثنى الحالات «غير منطبق» من المقام، وتُسجّل «غير موثق» بشكل منفصل. لا تُعدّل نتائج جولة سابقة بعد اعتمادها.</div></div>
+    </div>
+  </div>`;
+}
+
+function tabRecommendations(p) {
+  const rcs = p.rootCauses || [];
+  const recs = p.recommendations || [];
+  return `<div class="card card-pad">
+    <div class="card-head"><div><div class="card-title">التوصيات والمتابعة</div><div class="card-sub">تحليل السبب الجذري وتوصيات موجهة للجهات المعنية</div></div></div>
+    ${rcs.length ? `<div class="small bold mb-8">تحليل السبب الجذري</div>
+      ${rcs.map((rc, i) => `<div class="action-card">
+        <div class="action-head"><div style="flex:1;min-width:240px">
+          <div class="action-title">الفجوة ${i + 1}: ${esc(rc.gap)}</div>
+          <div class="action-meta"><span>${icon("info")} السبب المباشر: ${esc(rc.cause || "—")}</span></div>
+        </div></div>
+        ${rc.why && rc.why.filter(Boolean).length ? `<div class="why-chain">${rc.why.map((w, j) => w ? `<span class="why"><b>لماذا ${j + 1}؟</b> ${esc(w)}</span>` : "").join("")}</div>` : ""}
+      </div>`).join("")}` : ""}
+    <div class="divider"></div>
+    ${recs.length ? `<div class="small bold mb-8">التوصيات</div>
+      ${recs.map((r) => `<div class="action-card">
+        <div class="action-head">
+          <div style="flex:1;min-width:240px">
+            <div class="action-title">${esc(r.text)}</div>
+            <div class="action-meta">
+              <span>${icon("alert")} الفجوة: ${esc(r.gap)}</span>
+              <span>${icon("users")} الجهة المعنية: ${esc(r.entity || "—")}</span>
+              <span>${icon("calendar")} المتابعة: ${fmtDate(r.due)}</span>
+            </div>
+          </div>
+          <div class="flex wrap"><span class="badge ${r.priority === "عالية" ? "st-improve" : r.priority === "متوسطة" ? "st-acceptable" : "st-neutral"}">أولوية ${esc(r.priority || "—")}</span></div>
+        </div>
+        ${r.note ? `<div class="action-meta"><span>${icon("file")} ${esc(r.note)}</span></div>` : ""}
+      </div>`).join("")}` : `<div class="empty">${icon("target")}<b>لا توصيات مسجّلة</b>أضف توصيات موجهة للجهات المعنية بناءً على الفجوات المحددة.</div>`}
+  </div>`;
+}
+
+function tabOutcomes(p) {
+  return `<div class="card card-pad">
+    <div class="card-head"><div><div class="card-title">مؤشرات النتيجة وسلامة المرضى</div><div class="card-sub">اختيارية — تُقاس على فترة أطول وتتأثر بعوامل متعددة</div></div></div>
+    ${p.outcomes && p.outcomes.length ? `<div class="table-wrap"><table>
+      <thead><tr><th>المؤشر</th><th>القيمة الحالية</th><th>الهدف</th><th>ملاحظة</th></tr></thead>
+      <tbody>${p.outcomes.map((o) => `<tr><td class="td-title">${esc(o.name)}</td><td class="num"><b>${esc(o.value)}</b></td><td class="num">${esc(o.target)}</td><td class="small muted">${esc(o.note)}</td></tr>`).join("")}</tbody>
+    </table></div>` : `<div class="empty">${icon("activity")}<b>لا مؤشرات نتيجة</b>مؤشرات النتيجة اختيارية في هذه المرحلة.</div>`}
+    <div class="notice notice-blue mt-16">${icon("info")}<div>لا تُستخدم مؤشرات النتيجة لإثبات سببية التدخل؛ تُعرض كسياق داعم فقط.</div></div>
+  </div>`;
+}
+
+function tabAttachments(p) {
+  return `<div class="card card-pad">
+    <div class="card-head"><div><div class="card-title">المرفقات والأدلة</div><div class="card-sub">الأنواع المسموحة: ${CONFIG.allowedAttachmentTypes.join("، ")} · الحد الأقصى ${CONFIG.maxAttachmentMB} ميغابايت</div></div>
+      ${can("canEdit") ? `<button class="btn btn-soft btn-sm" data-act="upload" data-id="${p.id}">${icon("upload")} رفع مرفق</button>` : ""}</div>
+    ${p.attachments.length ? p.attachments.map((f) => `
+      <div class="attach-row">
+        <div class="attach-ico">${icon("file")}</div>
+        <div style="flex:1"><div class="attach-name">${esc(f.name)}</div>
+          <div class="attach-meta">${esc(f.type.toUpperCase())} · ${esc(f.size)} · رفعه ${esc(userById(f.by).name)} · ${fmtDate(f.date)}</div></div>
+        <span class="badge ${f.sensitivity.includes("معتمد") ? "st-teal" : "st-neutral"}">${esc(f.sensitivity)}</span>
+        <button class="btn btn-ghost btn-sm" data-act="download" data-name="${esc(f.name)}">${icon("download")} تنزيل</button>
+      </div>`).join("") : `<div class="empty">${icon("file")}<b>لا مرفقات</b>أضف أدوات جمع البيانات والتقارير المعتمدة.</div>`}
+    <div class="notice mt-16">${icon("lock")}<div><b>قبل الرفع:</b> يمنع رفع أسماء المرضى أو أرقام الملفات أو الصور أو أي معلومة تعريفية. استخدم رموز دراسة مجهولة فقط. يُسجّل كل تنزيل في سجل الأحداث.</div></div>
+  </div>`;
+}
+
+function tabEvents(p) {
+  const evs = [...(p.events || [])].reverse();
+  return `<div class="card card-pad">
+    <div class="card-head"><div><div class="card-title">سجل أحداث المشروع</div><div class="card-sub">سجل غير قابل للتعديل — من فعل ماذا ومتى وما القيمة السابقة والجديدة</div></div></div>
+    <div class="timeline">
+      ${evs.map((e) => `<div class="tl-item">
+        <div class="tl-time">${esc(e.time)} · ${esc(userById(e.user).name)}</div>
+        <div class="tl-text"><b>${esc(e.action)}</b> — من «${esc(e.old)}» إلى «${esc(e.new)}»</div>
+      </div>`).join("")}
+    </div>
+    <div class="notice mt-16">${icon("shield")}<div>يُحفظ السجل غير قابل للتعديل من الواجهة، ومحمياً على الخادم، مع تسجيل محاولات الوصول والتنزيل.</div></div>
+  </div>`;
+}
+
+function tabReport(p) {
+  const r = latestRound(p), b = baselineRound(p);
+  const rows = p.criteria.map((c) => {
+    const rb = critRate(p, c.id, b), rn = critRate(p, c.id, r);
+    return `<tr><td>${esc(c.no)}</td><td class="crit-text">${esc(c.text)}</td><td class="num">${fmtPct(rb)}</td><td class="num">${fmtPct(rn)}</td><td class="num ${rn != null && rb != null && rn >= rb ? "trend-up" : "trend-down"}">${rn != null && rb != null ? (rn - rb >= 0 ? "+" : "") + round1(rn - rb) : "—"}</td></tr>`;
+  }).join("");
+  return `<div class="card card-pad">
+    <div class="card-head"><div><div class="card-title">ملخص التقرير</div><div class="card-sub">جاهز للطباعة والاعتماد — نسخة مختصرة</div></div>
+      <button class="btn btn-ghost btn-sm" data-act="print">${icon("print")} طباعة</button></div>
+    <div class="summary-box">
+      <div class="summary-line"><span>رقم التدقيق</span><b>${esc(p.code)}</b></div>
+      <div class="summary-line"><span>العنوان</span><b>${esc(p.title)}</b></div>
+      <div class="summary-line"><span>القسم</span><b>${esc(p.dept)}</b></div>
+      <div class="summary-line"><span>الفريق</span><b>${[p.leader, ...(p.memberNames || [])].filter(Boolean).map(esc).join("، ") || "—"}</b></div>
+      <div class="summary-line"><span>فترة جمع البيانات</span><b>${esc(p.dcStart && p.dcEnd ? p.dcStart + " — " + p.dcEnd : (p.scope.period || "—"))}</b></div>
+      <div class="summary-line"><span>حجم العينة</span><b class="num">${r ? r.sample : "—"}</b></div>
+      <div class="summary-line"><span>نسبة الالتزام (خط الأساس)</span><b class="num">${fmtPct(roundTotals(p, b).rate)}</b></div>
+      <div class="summary-line"><span>نسبة الالتزام (الأحدث)</span><b class="num">${fmtPct(roundTotals(p, r).rate)}</b></div>
+      <div class="summary-line"><span>حالة الاعتماد</span><b>${p.approval && p.approval.by ? "معتمد — " + esc(userById(p.approval.by).name) + " · " + fmtDate(p.approval.date) : "بانتظار الاعتماد"}</b></div>
+    </div>
+    <div class="table-wrap mt-16"><table>
+      <thead><tr><th>#</th><th>المعيار</th><th>خط الأساس</th><th>الأحدث</th><th>الفرق</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="notice notice-blue mt-16">${icon("info")}<div>الفرق بالنقاط المئوية وصفٌ للتغيّر بين جولتين، وليس إثباتاً لعلاقة سببية. يجب ذكر ذلك في التقرير الرسمي.</div></div>
+  </div>`;
+}
+
+/* ==========================================================================
+   4-ب) المعالج متعدد الخطوات + بقية الصفحات + النوافذ + التشغيل
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   معالج إنشاء/تعديل المشروع — سبع خطوات قصيرة مع حفظ تلقائي
+   -------------------------------------------------------------------------- */
+const WIZ_STEPS = [
+  { key: "define", title: "تعريف المشروع", sub: "العنوان والقسم وقائد الفريق والأعضاء والهدف." },
+  { key: "scope", title: "النطاق", sub: "من ندرس وأين ومتى وبأي طريقة." },
+  { key: "criteria", title: "المعايير", sub: "كل معيار سجل مستقل قابل للقياس." },
+  { key: "sample", title: "خطة جمع البيانات والعينة", sub: "فترة الجمع وطريقته وحجم العينة وتوزيع النتائج." },
+  { key: "results", title: "تحليل البيانات والنتائج", sub: "نسبة تحقق كل معيار وتحليل السبب الجذري." },
+  { key: "recommend", title: "التوصيات والمتابعة", sub: "توصيات موجهة للجهات المعنية بناءً على الفجوات." },
+  { key: "reaudit", title: "إعادة التقييم", sub: "موعد الإعادة وتوليد تقرير المشروع الكامل ورفعه." }
+];
+
+function blankProject() {
+  return {
+    id: "p" + Date.now(), code: "", title: "", dept: "", owner: state.user ? state.user.id : "",
+    leader: "", memberNames: [], stage: 1, state: "مسودة", startDate: todayISO(), endDate: "", reauditDate: "",
+    objective: "", background: "", reauditNotes: "",
+    teamNo: "001", auditNo: "", criteriaSource: "manual", criteriaDoc: "", resultsDoc: "", recDoc: "",
+    dcStart: "", dcEnd: "",
+    scope: { population: "", period: "", sample: "", method: "" },
+    criteria: [], rounds: [], actions: [], rootCauses: [], recommendations: [],
+    outcomes: [], attachments: [], events: [],
+    approval: { by: "", date: "", decision: "", note: "" }, notes: ""
+  };
+}
+
+function startWizard(mode, id) {
+  let data;
+  if (mode === "edit") {
+    data = clone(projectById(id));
+    if (!data.teamNo) data.teamNo = "001";
+    if (!data.auditNo) data.auditNo = String((data.code || "").split("-")[2] || "001");
+    if (!data.criteriaSource) data.criteriaSource = "manual";
+    if (data.dcStart == null) data.dcStart = "";
+    // في وضع التعديل نُهيّئ حقول النتائج من آخر جولة قياس حتى لا تُفقد الجولات السابقة
+    const lr = data.rounds && data.rounds.length ? data.rounds[data.rounds.length - 1] : null;
+    if (lr) {
+      data._results = {};
+      data.criteria.forEach((c) => { data._results[c.id] = { ...(lr.results[c.id] || { met: 0, app: 0, undoc: 0 }) }; });
+      data._sample = lr.sample; data._roundDate = lr.date; data._roundPeriod = lr.period;
+    }
+  } else {
+    data = blankProject();
+    data.teamNo = "001";
+    data.auditNo = String(DB.projects.filter((p) => String(p.code || "").startsWith("CA-" + data.teamNo + "-")).length + 1).padStart(3, "0");
+    data.code = `CA-${data.teamNo}-${data.auditNo}`;
+    data.criteria = [blankCriterion(1)];
+  }
+  state.wizard = { mode, step: 0, data, errors: {} };
+  state.view = "new";
+  renderShell();
+}
+const blankCriterion = (n) => ({
+  id: "c" + Date.now() + Math.floor(Math.random() * 999), no: "C" + n, text: "",
+  definition: "", target: 100, severity: "متوسطة"
+});
+const blankRootCause = () => ({ id: "rc" + Date.now() + Math.floor(Math.random() * 999), gap: "", cause: "", why: ["", "", "", "", ""] });
+const blankRecommendation = () => ({ id: "rec" + Date.now() + Math.floor(Math.random() * 999), gap: "", text: "", entity: "", priority: "متوسطة", due: "", note: "" });
+
+function viewWizard() {
+  const w = state.wizard;
+  if (!w) { state.view = "projects"; return viewProjects(); }
+  const st = WIZ_STEPS[w.step];
+  const pct = Math.round((w.step) / (WIZ_STEPS.length - 1) * 100);
+  return `
+  <div class="wizard">
+    <div class="wiz-head">
+      <div class="between wrap">
+        <div><h1 class="page-title">${w.mode === "edit" ? "تعديل مشروع التدقيق" : "مشروع تدقيق جديد"}</h1>
+          <p class="page-sub">${esc(w.data.code)} · ${esc(w.data.title || "بدون عنوان بعد")}</p></div>
+        <div class="flex">
+          <span class="badge st-neutral">مسودة</span>
+          <button class="btn btn-ghost btn-sm" data-act="wiz-cancel">${icon("x")} إلغاء</button>
+        </div>
+      </div>
+      <div class="wiz-progress"><i style="width:${pct}%"></i></div>
+      <div class="wiz-steps">
+        ${WIZ_STEPS.map((s, i) => `<div class="wiz-step ${i === w.step ? "active" : i < w.step ? "done" : ""}" data-wstep="${i}" title="الانتقال إلى ${s.title}"><span class="n">${i < w.step ? "✓" : i + 1}</span>${s.title}</div>`).join("")}
+      </div>
+    </div>
+    <div class="card">
+      <div class="wiz-body">
+        <div class="wiz-title">${w.step + 1}. ${st.title}</div>
+        <div class="wiz-sub">${st.sub}</div>
+        ${wizardStepHTML(w)}
+        <div class="wiz-foot">
+          <div class="autosave">${icon("check")} ${w.lastSaved ? "آخر حفظ " + w.lastSaved : "الحفظ متاح بعد استكمال صفحة تعريف المشروع"}</div>
+          <div class="flex">
+            ${w.step > 0 ? `<button class="btn btn-ghost" data-act="wiz-prev">${icon("arrow")} السابق</button>` : ""}
+            <button class="btn btn-soft" data-act="save-draft">${icon("save")} حفظ كمسودة</button>
+            ${w.step < WIZ_STEPS.length - 1
+              ? `<button class="btn btn-primary" data-act="wiz-next">التالي ${icon("arrowL")}</button>`
+              : `<button class="btn btn-primary" data-act="wiz-save">${icon("save")} حفظ المشروع</button>`}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notice mt-16">${icon("lock")}<div>لا تُدخل أسماء مرضى أو أرقام ملفات أو صوراً تعريفية في أي حقل. استخدم رموز دراسة مجهولة فقط.</div></div>
+  </div>`;
+}
+
+function field(id, label, value, opts = {}) {
+  const err = state.wizard.errors[id];
+  const req = opts.required ? '<span class="req">*</span>' : "";
+  const hint = opts.hint ? `<div class="hint">${opts.hint}</div>` : "";
+  let input;
+  if (opts.type === "textarea") input = `<textarea class="textarea ${err ? "err" : ""}" id="w_${id}" data-wfield="${id}" rows="${opts.rows || 3}" placeholder="${esc(opts.ph || "")}">${esc(value || "")}</textarea>`;
+  else if (opts.type === "select") input = `<select class="select ${err ? "err" : ""}" id="w_${id}" data-wfield="${id}">${opts.options.map((o) => `<option ${o === value ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  /* combo: حقل نصي مع قائمة اقتراحات — يسمح باختيار قسم موجود أو كتابة قسم جديد */
+  else if (opts.type === "combo") input = `<input class="input ${err ? "err" : ""}" type="text" list="dl_${id}" id="w_${id}" data-wfield="${id}" value="${esc(value || "")}" placeholder="${esc(opts.ph || "")}" autocomplete="off"><datalist id="dl_${id}">${(opts.options || []).map((o) => `<option value="${esc(o)}"></option>`).join("")}</datalist>`;
+  else if (opts.type === "number") input = `<input class="input ${err ? "err" : ""}" type="number" min="${opts.min || 0}" id="w_${id}" data-wfield="${id}" value="${esc(value == null ? "" : value)}">`;
+  else if (opts.type === "date") input = `<input class="input ${err ? "err" : ""}" type="date" id="w_${id}" data-wfield="${id}" value="${esc(value || "")}">`;
+  else input = `<input class="input ${err ? "err" : ""}" type="text" id="w_${id}" data-wfield="${id}" value="${esc(value || "")}" placeholder="${esc(opts.ph || "")}"${opts.readonly ? ' readonly style="background:#f2f7f8"' : ""}>`;
+  return `<div class="field ${opts.full ? "full" : ""}"><label for="w_${id}">${label} ${req}</label>${input}${hint}<div class="err-msg ${err ? "show" : ""}">${esc(err || "")}</div></div>`;
+}
+
+function collectionDays(d) {
+  if (!d || !d.dcStart || !d.dcEnd) return null;
+  const a = new Date(d.dcStart + "T00:00:00");
+  const b = new Date(d.dcEnd + "T00:00:00");
+  if (isNaN(a) || isNaN(b) || b < a) return null;
+  return Math.round((b - a) / 86400000) + 1;
+}
+
+function wizardStepHTML(w) {
+  const d = w.data;
+  if (w.step === 0) {
+    if (!d.memberNames) d.memberNames = [];
+    return `<div class="form-grid">
+      ${field("teamNo", "رقم الفريق", d.teamNo, { required: true, ph: "001" })}
+      ${field("auditNo", "رقم المشروع داخل الفريق", d.auditNo, { required: true, ph: "001" })}
+      ${field("code", "رقم التدقيق (تلقائي)", d.code, { required: true, readonly: true, hint: "يُولَّد آلياً بصيغة CA-001-002: Clinical Audit / رقم الفريق / رقم المشروع داخل الفريق." })}
+      ${field("title", "عنوان مشروع التدقيق", d.title, { required: true, full: true, ph: "مثال: توثيق المتابعات اليومية في قسم الباطنة" })}
+      ${field("dept", "القسم", d.dept, { required: true, ph: "اكتب اسم القسم" })}
+      ${field("leader", "قائد الفريق", d.leader, { required: true, ph: "اكتب اسم قائد الفريق" })}
+      <div class="field full"><label>أعضاء الفريق</label>
+        <div id="memberNamesBox">
+          ${(d.memberNames.length ? d.memberNames : [""]).map((m, i) => `<div class="member-line"><input class="input" data-mname="${i}" value="${esc(m)}" placeholder="اسم عضو الفريق"><button type="button" class="btn btn-ghost btn-icon" data-del-mname="${i}" title="إزالة">${icon("x")}</button></div>`).join("")}
+        </div>
+        <button type="button" class="btn btn-soft btn-sm mt-8" data-act="add-mname">${icon("plus")} إضافة عضو</button>
+        <div class="hint">يمكن إضافة عدة أعضاء.</div>
+        <div class="err-msg ${w.errors.members ? "show" : ""}">${esc(w.errors.members || "")}</div>
+      </div>
+      ${field("objective", "الهدف من التدقيق", d.objective, { required: true, type: "textarea", full: true, ph: "ما الذي نقيسه؟ وما القرار الذي سيتغير بناءً على النتيجة؟" })}
+      ${field("background", "الخلفية وأهمية الموضوع", d.background, { required: true, type: "textarea", full: true, ph: "لماذا هذا الموضوع مهم طبياً؟ ما الدليل أو البروتوكول المرجعي؟" })}
+      <div class="full notice notice-blue">${icon("info")}<div>جميع حقول هذه الصفحة إلزامية، ولا يمكن حفظ المشروع كمسودة قبل استكمالها.</div></div>
+    </div>`;
+  }
+  if (w.step === 1) {
+    return `<div class="form-grid">
+      ${field("population", "المستهدفون", d.scope.population, { required: true, full: true, ph: "مثال: جميع المرضى المقيمين في قسم الباطنة" })}
+      ${field("sample", "وصف العينة", d.scope.sample, { required: true, full: true, ph: "مثال: 100 متابعة يومية مسحوبة عشوائياً" })}
+      <div class="full notice notice-blue">${icon("info")}<div><b>وحدة القياس:</b> يجب أن تكون واحدة وواضحة (متابعة، ملف، زيارة، عملية). لا تخلط وحدات مختلفة في نفس المؤشر.</div></div>
+    </div>`;
+  }
+  if (w.step === 2) {
+    if (!d.criteriaSource) d.criteriaSource = "manual";
+    const srcOpts = [["manual", "إدخال يدوي"], ["document", "مستند معايير"], ["both", "مستند وإدخال يدوي معاً"]];
+    return `<div class="form-grid" style="margin-bottom:16px">
+      <div class="field"><label for="w_criteriaSource">طريقة إدخال المعايير</label>
+        <select class="select" id="w_criteriaSource" data-wfield="criteriaSource">
+          ${srcOpts.map(([v, l]) => `<option value="${v}" ${d.criteriaSource === v ? "selected" : ""}>${l}</option>`).join("")}
+        </select>
+      </div>
+      ${d.criteriaSource !== "manual" ? `<div class="field"><label>مستند المعايير</label>
+        <label class="btn btn-soft file-btn">${icon("upload")} رفع مستند<input type="file" id="criteriaDoc" accept=".pdf,.docx,.xlsx"></label>
+        <div class="hint">${d.criteriaDoc ? "المستند المرفق: " + esc(d.criteriaDoc) : "أرفق ملف المعايير المعتمدة (PDF أو Word أو Excel)."}</div>
+      </div>` : ""}
+    </div>
+    ${d.criteriaSource !== "document" ? `<div id="critList">
+      ${d.criteria.map((c, i) => `<div class="crit-editor" data-crit="${c.id}">
+        <div class="crit-editor-head"><b>المعيار ${i + 1} — ${esc(c.no)}</b>
+          ${d.criteria.length > 1 ? `<button type="button" class="link-btn" data-del-crit="${c.id}">${icon("trash")} حذف</button>` : ""}</div>
+        <div class="form-grid">
+          ${field("crit_text_" + c.id, "نص المعيار", c.text, { required: true, full: true, ph: "صياغة قابلة للقياس والتحقق" })}
+          ${field("crit_target_" + c.id, "الحد المستهدف %", c.target, { type: "number", min: 0 })}
+          ${field("crit_def_" + c.id, "تعريف الاستيفاء", c.definition, { full: true, ph: "ما الذي يُعدّ مستوفياً بدقة؟" })}
+          ${field("crit_sev_" + c.id, "خطورة الفجوة", c.severity, { type: "select", options: ["عالية", "متوسطة", "منخفضة"] })}
+        </div>
+      </div>`).join("")}
+    </div>
+    <button type="button" class="btn btn-soft btn-sm" data-act="add-crit">${icon("plus")} إضافة معيار</button>` : ""}
+    <div class="notice notice-blue mt-16">${icon("info")}<div>كل معيار يجب أن يحدد الرقم والنص وتعريف الاستيفاء والحد المستهدف</div></div>`;
+  }
+  if (w.step === 3) {
+    const days = collectionDays(d);
+    return `<div class="form-grid">
+      ${field("dcStart", "تاريخ بدء جمع البيانات", d.dcStart, { required: true, type: "date" })}
+      ${field("dcEnd", "تاريخ انتهاء جمع البيانات", d.dcEnd, { required: true, type: "date" })}
+      ${field("collectionDays", "عدد أيام الجمع", days == null ? "" : days, { readonly: true, hint: "يُحسب آلياً من تاريخي البداية والانتهاء." })}
+      ${field("method", "طريقة جمع البيانات", d.scope.method, { required: true, ph: "مراجعة ملفات / ملاحظة مباشرة / استبيان…" })}
+      ${field("round_sample", "حجم العينة (عدد الوحدات)", d._sample || "", { required: true, type: "number", min: 1 })}
+      <div class="full"><div class="divider"></div><b>توزيع الحالات على المعايير</b>
+        <div class="hint" style="margin-bottom:10px">أدخل عدد الحالات المستوفية وعدد الحالات المنطبقة وعدد الحالات غير الموثقة. الحالات «غير موثق» تُستثنى من المقام.</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>المعيار</th><th>مستوفى</th><th>منطبق</th><th>غير موثق</th><th>النسبة</th></tr></thead>
+          <tbody>${d.criteria.map((c) => {
+            const res = (d._results && d._results[c.id]) || { met: "", app: "", undoc: 0 };
+            const den = (Number(res.app) || 0) - (Number(res.undoc) || 0);
+            const rate = den > 0 ? (Number(res.met) / den * 100) : null;
+            return `<tr>
+              <td class="crit-text"><b>${esc(c.no)}</b> — ${esc(c.text || "—")}</td>
+              <td><input class="input" style="min-height:38px;width:90px" type="number" min="0" data-res="${c.id}" data-k="met" value="${esc(res.met)}"></td>
+              <td><input class="input" style="min-height:38px;width:90px" type="number" min="0" data-res="${c.id}" data-k="app" value="${esc(res.app)}"></td>
+              <td><input class="input" style="min-height:38px;width:90px" type="number" min="0" data-res="${c.id}" data-k="undoc" value="${esc(res.undoc)}"></td>
+              <td><b class="num rate-live">${fmtPct(rate)}</b></td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>
+        <div class="summary-box mt-16" id="liveTotals">
+          <div class="summary-line"><span>إجمالي المستوفى</span><b class="num" data-lt="met">0</b></div>
+          <div class="summary-line"><span>إجمالي المنطبق</span><b class="num" data-lt="app">0</b></div>
+          <div class="summary-line"><span>غير موثق (مستثنى من المقام)</span><b class="num" data-lt="undoc">0</b></div>
+          <div class="summary-line"><span>النسبة المرجّحة (تُحدَّث فوراً)</span><b class="num" data-lt="rate">—</b></div>
+        </div>
+      </div>
+    </div>`;
+  }  if (w.step === 4) {
+    if (!d.rootCauses) d.rootCauses = [];
+    const rows = d.criteria.map((c) => {
+      const res = (d._results && d._results[c.id]) || {};
+      const den = (Number(res.app) || 0) - (Number(res.undoc) || 0);
+      const rate = den > 0 ? Number(res.met) / den * 100 : null;
+      return `<tr><td class="crit-text"><b>${esc(c.no)}</b> — ${esc(c.text)}</td><td><b class="num">${fmtPct(rate)}</b></td></tr>`;
+    }).join("");
+    const tot = d.criteria.reduce((acc, c) => {
+      const r = (d._results && d._results[c.id]) || {};
+      acc.met += Number(r.met) || 0; acc.app += Number(r.app) || 0; acc.undoc += Number(r.undoc) || 0; return acc;
+    }, { met: 0, app: 0, undoc: 0 });
+    const denTot = tot.app - tot.undoc;
+    return `<div class="table-wrap"><table>
+        <thead><tr><th>المعيار</th><th>نسبة تحقق كل معيار</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <div class="summary-box mt-16">
+        <div class="summary-line"><span>إجمالي المستوفى</span><b class="num">${tot.met}</b></div>
+        <div class="summary-line"><span>إجمالي المنطبق</span><b class="num">${tot.app}</b></div>
+        <div class="summary-line"><span>غير موثق (مستثنى من المقام)</span><b class="num">${tot.undoc}</b></div>
+        <div class="summary-line"><span>النسبة المرجّحة</span><b class="num">${fmtPct(denTot > 0 ? tot.met / denTot * 100 : null)}</b></div>
+      </div>
+      <div class="doc-import mt-16"><div class="field"><label>استيراد النتائج كمستند</label>
+        <label class="btn btn-soft file-btn">${icon("upload")} رفع مستند<input type="file" id="resultsDoc" accept=".pdf,.docx,.xlsx"></label>
+        <div class="hint">${d.resultsDoc ? "المستند المرفق: " + esc(d.resultsDoc) : "يمكنك إرفاق ملف نتائج التحليل بدلاً من الإدخال اليدوي أو إضافةً إليه."}</div>
+      </div></div>
+      ${field("notes", "ملاحظات منهجية على النتائج", d.notes, { type: "textarea", full: true, ph: "قيود القياس، أثر الملاحظة، عدم إثبات السببية…" })}
+      <div class="full mt-16"><div class="divider"></div><b>تحليل السبب الجذري</b>
+        <div class="hint" style="margin-bottom:10px">لكل فجوة، حدّد السبب المباشر وتتبّع «لماذا» خمس مرات.</div>
+        <div id="rcList">
+        ${d.rootCauses.map((rc, i) => `<div class="crit-editor" data-rc="${rc.id}">
+          <div class="crit-editor-head"><b>تحليل الفجوة ${i + 1}</b>
+            ${d.rootCauses.length > 1 ? `<button type="button" class="link-btn" data-del-rc="${rc.id}">${icon("trash")} حذف</button>` : ""}</div>
+          <div class="form-grid">
+            ${field("rc_gap_" + rc.id, "الفجوة المرصودة", rc.gap, { required: true, full: true })}
+            ${field("rc_cause_" + rc.id, "السبب المباشر", rc.cause, { full: true })}
+            <div class="field full"><label>تحليل «لماذا خمس مرات»</label>
+              <div class="form-grid" style="gap:8px">
+                ${rc.why.map((wy, j) => `<input class="input" data-rcwhy="${rc.id}" data-idx="${j}" value="${esc(wy)}" placeholder="لماذا ${j + 1}؟">`).join("")}
+              </div>
+            </div>
+          </div>
+        </div>`).join("")}
+        </div>
+        <button type="button" class="btn btn-soft btn-sm" data-act="add-rootcause">${icon("plus")} إضافة تحليل سبب جذري</button>
+      </div>`;
+  }
+  if (w.step === 5) {
+    if (!d.recommendations) d.recommendations = [];
+    return `<div class="notice notice-blue">${icon("info")}<div>الدور يقتصر على تقديم توصيات للجهات المعنية ومتابعة تطبيقها، دون تنفيذ إجراءات تحسين من طرف الفريق.</div></div>
+    <div class="doc-import mt-16"><div class="field"><label>استيراد التوصيات كمستند</label>
+      <label class="btn btn-soft file-btn">${icon("upload")} رفع مستند<input type="file" id="recDoc" accept=".pdf,.docx,.xlsx"></label>
+      <div class="hint">${d.recDoc ? "المستند المرفق: " + esc(d.recDoc) : "يمكنك إرفاق ملف التوصيات بدلاً من الإدخال اليدوي أو إضافةً إليه."}</div>
+    </div></div>
+    <div id="recList" class="mt-16">
+      ${d.recommendations.map((r, i) => `<div class="crit-editor" data-rec="${r.id}">
+        <div class="crit-editor-head"><b>التوصية ${i + 1}</b>
+          ${d.recommendations.length > 1 ? `<button type="button" class="link-btn" data-del-rec="${r.id}">${icon("trash")} حذف</button>` : ""}</div>
+        <div class="form-grid">
+          ${field("rec_gap_" + r.id, "الفجوة المرتبطة", r.gap, { required: true, full: true, ph: "اختر أو اكتب الفجوة التي تعالجها التوصية" })}
+          ${field("rec_text_" + r.id, "نص التوصية", r.text, { required: true, type: "textarea", full: true, ph: "توصية واضحة وقابلة للتنفيذ موجهة للجهة المعنية" })}
+          ${field("rec_entity_" + r.id, "الجهة المعنية", r.entity, { ph: "القسم / الإدارة / لجنة الجودة" })}
+          ${field("rec_priority_" + r.id, "الأولوية", r.priority, { type: "select", options: ["عالية", "متوسطة", "منخفضة"] })}
+          ${field("rec_due_" + r.id, "موعد المتابعة", r.due, { type: "date" })}
+          ${field("rec_note_" + r.id, "ملاحظات المتابعة", r.note, { full: true })}
+        </div>
+      </div>`).join("")}
+    </div>
+    <button type="button" class="btn btn-soft btn-sm" data-act="add-rec">${icon("plus")} إضافة توصية</button>`;
+  }
+  const tot = d.criteria.reduce((acc, c) => {
+    const r = (d._results && d._results[c.id]) || {};
+    acc.met += Number(r.met) || 0; acc.app += Number(r.app) || 0; acc.undoc += Number(r.undoc) || 0; return acc;
+  }, { met: 0, app: 0, undoc: 0 });
+  const denTot = tot.app - tot.undoc;
+  return `<div class="form-grid">
+      ${field("reauditDate", "موعد إعادة التقييم (اختياري)", d.reauditDate, { type: "date" })}
+      ${field("state", "حالة المشروع", d.state, { type: "select", options: CONFIG.projectStates })}
+      ${field("reauditNotes", "ملاحظات إعادة التقييم", d.reauditNotes, { type: "textarea", full: true, ph: "ما الذي سيُقاس عند إعادة التقييم؟ وما الشروط المسبقة؟" })}
+      <div class="full summary-box">
+        <div class="summary-line"><span>رقم التدقيق</span><b>${esc(d.code)}</b></div>
+        <div class="summary-line"><span>العنوان</span><b>${esc(d.title || "—")}</b></div>
+        <div class="summary-line"><span>القسم</span><b>${esc(d.dept || "—")}</b></div>
+        <div class="summary-line"><span>قائد الفريق</span><b>${esc(d.leader || "—")}</b></div>
+        <div class="summary-line"><span>عدد المعايير</span><b class="num">${d.criteria.length}</b></div>
+        <div class="summary-line"><span>نسبة الالتزام المحسوبة</span><b class="num">${fmtPct(denTot > 0 ? tot.met / denTot * 100 : null)}</b></div>
+        <div class="summary-line"><span>عدد التوصيات</span><b class="num">${(d.recommendations || []).length}</b></div>
+      </div>
+      <div class="full doc-import">
+        <b>تقرير المشروع الكامل</b>
+        <div class="hint" style="margin:6px 0 12px">يولّد مستنداً يجمع تعريف المشروع والنطاق وخطة الجمع وتحليل البيانات والنتائج والتوصيات وإعادة التقييم، ثم يرفعه إلى Google Drive في مجلد المشروع.</div>
+        <div class="flex wrap">
+          <button type="button" class="btn btn-primary" data-act="gen-pdf" data-id="${d.id}">${icon("download")} توليد PDF للمشروع</button>
+          <button type="button" class="btn btn-soft" data-act="drive-upload" data-id="${d.id}">${icon("upload")} رفع التقرير إلى Google Drive</button>
+        </div>
+      </div>
+      <div class="full notice">${icon("alert")}<div>بعد الحفظ تُسجّل العملية في سجل الأحداث باسم المستخدم الحالي. لا يمكن حذف مشروع معتمد نهائياً؛ يُؤرشف مع ذكر السبب.</div></div>
+    </div>`;
+}
+
+/* حفظ بيانات المعالج من الحقول */
+function syncWizardFromDOM() {
+  const w = state.wizard;
+  if (!w) return;
+  const d = w.data;
+  $$("[data-wfield]").forEach((el) => {
+    const k = el.dataset.wfield;
+    let v = el.value;
+    if (el.type === "number") v = v === "" ? "" : Number(v);
+    if (k.startsWith("crit_")) {
+      const [, prop, cid] = k.split("_");
+      const c = d.criteria.find((x) => x.id === cid);
+      if (c) {
+        if (prop === "text") c.text = v;
+        else if (prop === "target") c.target = v;
+        else if (prop === "def") c.definition = v;
+        else if (prop === "sev") c.severity = v;
+      }
+    } else if (k.startsWith("rc_")) {
+      const [, prop, rid] = k.split("_");
+      const rc = (d.rootCauses || []).find((x) => x.id === rid);
+      if (rc) { if (prop === "gap") rc.gap = v; else if (prop === "cause") rc.cause = v; }
+    } else if (k.startsWith("rec_")) {
+      const [, prop, rid] = k.split("_");
+      const r = (d.recommendations || []).find((x) => x.id === rid);
+      if (r) {
+        if (prop === "gap") r.gap = v;
+        else if (prop === "text") r.text = v;
+        else if (prop === "entity") r.entity = v;
+        else if (prop === "priority") r.priority = v;
+        else if (prop === "due") r.due = v;
+        else if (prop === "note") r.note = v;
+      }
+    } else if (k === "population" || k === "period" || k === "sample" || k === "method") {
+      d.scope[k] = v;
+    } else if (k === "round_sample") d._sample = v;
+    else if (k === "teamNo") { d.teamNo = v; d.code = `CA-${v}-${d.auditNo || "001"}`; }
+    else if (k === "auditNo") { d.auditNo = v; d.code = `CA-${d.teamNo || "001"}-${v}`; }
+    else if (k === "code") d.code = v;
+    else d[k] = v;
+  });
+  $$("[data-res]").forEach((el) => {
+    const cid = el.dataset.res, k = el.dataset.k;
+    if (!d._results) d._results = {};
+    if (!d._results[cid]) d._results[cid] = { met: "", app: "", undoc: 0 };
+    d._results[cid][k] = el.value === "" ? "" : Number(el.value);
+  });
+  $$("[data-rcwhy]").forEach((el) => {
+    const rc = (d.rootCauses || []).find((x) => x.id === el.dataset.rcwhy);
+    if (rc) rc.why[Number(el.dataset.idx)] = el.value;
+  });
+  $$("[data-mname]").forEach((el) => {
+    if (!d.memberNames) d.memberNames = [];
+    d.memberNames[Number(el.dataset.mname)] = el.value;
+  });
+  const cd = $("#criteriaDoc"); if (cd && cd.files && cd.files[0]) d.criteriaDoc = cd.files[0].name;
+  const rd = $("#resultsDoc"); if (rd && rd.files && rd.files[0]) d.resultsDoc = rd.files[0].name;
+  const rcDoc = $("#recDoc"); if (rcDoc && rcDoc.files && rcDoc.files[0]) d.recDoc = rcDoc.files[0].name;
+}
+
+function definitionComplete(d) {
+  return !!(d.title && String(d.title).trim() && d.dept && String(d.dept).trim()
+    && d.leader && String(d.leader).trim() && d.objective && String(d.objective).trim()
+    && d.background && String(d.background).trim() && /^\d{3}$/.test(String(d.teamNo || ""))
+    && (d.memberNames || []).some((x) => String(x || "").trim()));
+}
+
+function validateStep() {
+  const w = state.wizard, d = w.data, e = {};
+  if (w.step === 0) {
+    if (!String(d.title || "").trim()) e.title = "عنوان المشروع مطلوب.";
+    if (!String(d.dept || "").trim()) e.dept = "اكتب اسم القسم.";
+    if (!String(d.leader || "").trim()) e.leader = "اسم قائد الفريق مطلوب.";
+    if (!String(d.objective || "").trim()) e.objective = "الهدف مطلوب — بدونه لا يمكن تقييم النتيجة.";
+    if (!String(d.background || "").trim()) e.background = "الخلفية وأهمية الموضوع مطلوبة.";
+    if (!/^\d{3}$/.test(String(d.teamNo || ""))) e.teamNo = "رقم الفريق ثلاثة أرقام، مثال 001.";
+    if (!(d.memberNames || []).some((x) => String(x || "").trim())) e.members = "أضف عضواً واحداً على الأقل.";
+  }
+  if (w.step === 1) {
+    if (!String(d.scope.population || "").trim()) e.population = "حدّد المستهدفين.";
+    if (!String(d.scope.sample || "").trim()) e.sample = "صف العينة ووحدة القياس.";
+  }
+  if (w.step === 2) {
+    if (d.criteriaSource !== "document") {
+      d.criteria.forEach((c) => {
+        if (!String(c.text || "").trim()) e["crit_text_" + c.id] = "نص المعيار مطلوب.";
+      });
+    }
+  }
+  if (w.step === 3) {
+    if (!d.dcStart) e.dcStart = "أدخل تاريخ بدء جمع البيانات.";
+    if (!d.dcEnd) e.dcEnd = "أدخل تاريخ انتهاء جمع البيانات.";
+    if (d.dcStart && d.dcEnd && collectionDays(d) == null) e.dcEnd = "تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء.";
+    if (!String(d.scope.method || "").trim()) e.method = "حدّد طريقة جمع البيانات.";
+    if (!d._sample) e.round_sample = "أدخل حجم العينة.";
+    d.criteria.forEach((c) => {
+      const r = (d._results || {})[c.id];
+      if (!r || r.app === "" || r.app == null) e["res_" + c.id] = "أدخل عدد الحالات المنطبقة.";
+      else if (Number(r.met) > Number(r.app)) e["res_" + c.id] = "البسط لا يمكن أن يتجاوز المقام.";
+      else if (Number(r.undoc) > Number(r.app)) e["res_" + c.id] = "غير الموثق لا يمكن أن يتجاوز المنطبق.";
+    });
+  }
+  if (w.step === 5) {
+    (d.recommendations || []).forEach((r) => {
+      if (!String(r.gap || "").trim()) e["rec_gap_" + r.id] = "الفجوة المرتبطة مطلوبة.";
+      if (!String(r.text || "").trim()) e["rec_text_" + r.id] = "نص التوصية مطلوب.";
+    });
+  }
+  if (w.step === 6) {
+  }
+  w.errors = e;
+  return Object.keys(e).length === 0;
+}
+
+function wizardNext() {
+  syncWizardFromDOM();
+  if (!validateStep()) {
+    renderShell();
+    const first = $(".err-msg.show");
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    toast("تحقّق من الحقول المطلوبة قبل الانتقال.", "warn");
+    return;
+  }
+  const w = state.wizard;
+  if (w.step === 3) {
+    const round = {
+      id: "r" + Date.now(), type: "baseline", label: "خط الأساس",
+      date: todayISO(), period: (w.data.dcStart && w.data.dcEnd) ? (w.data.dcStart + " — " + w.data.dcEnd) : "",
+      sample: Number(w.data._sample) || 0, evaluator: state.user ? state.user.id : "",
+      note: "أُدخلت في المعالج.", results: {}
+    };
+    w.data.criteria.forEach((c) => {
+      const r = (w.data._results || {})[c.id] || {};
+      round.results[c.id] = { met: Number(r.met) || 0, app: Number(r.app) || 0, undoc: Number(r.undoc) || 0 };
+    });
+    if (w.mode === "edit" && w.data.rounds && w.data.rounds.length) {
+      const last = w.data.rounds[w.data.rounds.length - 1];
+      last.results = round.results; last.sample = round.sample; last.date = round.date; last.period = round.period;
+    } else {
+      w.data.rounds = [round];
+    }
+  }
+  w.step = Math.min(WIZ_STEPS.length - 1, w.step + 1);
+  w.lastSaved = new Date().toLocaleTimeString("ar-SY-u-nu-latn", { hour: "2-digit", minute: "2-digit" });
+  w.errors = {};
+  renderShell();
+}
+
+function persistWizard(isDraft) {
+  const w = state.wizard, d = w.data;
+  if (d.dcStart && d.dcEnd) d.scope.period = d.dcStart + " — " + d.dcEnd;
+  d.stage = Math.max(d.stage || 1, isDraft ? (w.step + 1) : 6);
+  if (d.dept && !DB.departments.includes(d.dept)) DB.departments.push(d.dept);
+  const idx = DB.projects.findIndex((p) => p.id === d.id);
+  const isNew = idx < 0;
+  const now = new Date().toLocaleString("ar-SY-u-nu-latn");
+  if (isNew) {
+    d.events = [{ user: state.user.id, action: "إنشاء المشروع", time: now, old: "—", new: d.state }];
+    DB.projects.unshift(d);
+  } else {
+    const old = DB.projects[idx];
+    d.events = old.events || [];
+    d.events.push({ user: state.user.id, action: isDraft ? "حفظ مسودة" : "تعديل المشروع", time: now, old: old.state, new: d.state });
+    DB.projects[idx] = d;
+  }
+  saveDB();
+  return isNew;
+}
+
+async function wizardSaveDraft() {
+  syncWizardFromDOM();
+  if (!definitionComplete(state.wizard.data)) {
+    state.wizard.step = 0;
+    validateStep();
+    renderShell();
+    toast("لا يمكن حفظ المسودة قبل استكمال صفحة تعريف المشروع كاملة.", "warn");
+    return;
+  }
+  const isNew = persistWizard(true);
+  await persistProjects();
+  const up = await uploadWizardFiles(state.wizard.data.id);
+  state.wizard.lastSaved = new Date().toLocaleTimeString("ar-SY-u-nu-latn", { hour: "2-digit", minute: "2-digit" });
+  renderShell();
+  let msg = isNew ? "حُفظ المشروع كمسودة. يمكنك متابعة التعبئة لاحقاً." : "حُفظت المسودة بنجاح.";
+  if (up.total > 0) msg += " رُفع " + up.drive + " من " + up.total + " مستنداً إلى Google Drive.";
+  toast(msg, "ok");
+}
+
+async function wizardSave() {
+  syncWizardFromDOM();
+  if (!definitionComplete(state.wizard.data)) {
+    state.wizard.step = 0;
+    validateStep();
+    renderShell();
+    toast("لا يمكن حفظ المشروع قبل استكمال صفحة تعريف المشروع كاملة.", "warn");
+    return;
+  }
+  if (!validateStep()) { renderShell(); toast("تحقّق من الحقول المطلوبة.", "warn"); return; }
+  const w = state.wizard, d = w.data;
+  const projectId = d.id;
+  const pendingCount = Object.keys(w._files || {}).filter((k) => w._files[k]).length;
+  delete d._sample; delete d._roundDate; delete d._roundPeriod; delete d._evaluator; delete d._results;
+  const isNew = persistWizard(false);
+  await persistProjects();
+  const up = await uploadWizardFiles(projectId);
+  state.wizard = null;
+  state.view = "project";
+  state.projectId = projectId;
+  state.detailTab = "overview";
+  renderShell();
+  let msg = isNew ? "حُفظ المشروع. يمكنك استكمال بياناته في أي وقت." : "حُفظت التعديلات وسُجّلت في سجل الأحداث.";
+  if (up.total > 0) msg += " رُفع " + up.drive + " من " + up.total + " مستنداً إلى Google Drive.";
+  else if (pendingCount > 0) msg += " تعذّر رفع بعض المستندات إلى Drive.";
+  toast(msg, "ok");
+}
+
+/* --------------------------------------------------------------------------
+   صفحة التقارير والمؤشرات
+   -------------------------------------------------------------------------- */
+function viewReports() {
+  const k = kpis();
+  const active = activeProjects();
+  const withTwo = active.filter((p) => p.rounds.length >= 2);
+  const byDept = {};
+  active.forEach((p) => {
+    const r = projectCompliance(p);
+    if (r == null) return;
+    if (!byDept[p.dept]) byDept[p.dept] = [];
+    byDept[p.dept].push(r);
+  });
+  return `
+  ${pageHead("التقارير والمؤشرات", "ملخص إداري موحّد: عدد المشاريع، المتأخر منها، ونسبة إغلاق الإجراءات",
+    `<button class="btn btn-ghost" data-act="export">${icon("download")} تصدير ملخص إداري</button><button class="btn btn-ghost" data-act="print">${icon("print")} طباعة</button>`)}
+  <div class="grid grid-4">
+    <div class="card kpi"><div class="kpi-top"><span class="kpi-label">إجمالي المشاريع</span><span class="kpi-ico">${icon("layers")}</span></div><div class="kpi-val num">${k.total}</div><div class="kpi-foot">${k.active} نشط · ${k.total - k.active} مؤرشف</div></div>
+    <div class="card kpi ${k.avg >= 90 ? "good" : k.avg >= 75 ? "warn" : "bad"}"><div class="kpi-top"><span class="kpi-label">متوسط الالتزام</span><span class="kpi-ico">${icon("target")}</span></div><div class="kpi-val num">${fmtPct(k.avg)}</div><div class="kpi-foot">عبر ${k.active} مشروعاً نشطاً</div></div>
+    <div class="card kpi bad"><div class="kpi-top"><span class="kpi-label">مشاريع تحتاج تحسيناً</span><span class="kpi-ico">${icon("alert")}</span></div><div class="kpi-val num">${k.needImprove}</div><div class="kpi-foot">أقل من ${CONFIG.thresholds.acceptable}%</div></div>
+    <div class="card kpi good"><div class="kpi-top"><span class="kpi-label">مشاريع مكتملة</span><span class="kpi-ico">${icon("check")}</span></div><div class="kpi-val num">${k.total - k.active}</div><div class="kpi-foot">من أصل ${k.total} مشروعاً</div></div>
+  </div>
+
+  <div class="grid grid-2 mt-16">
+    <div class="card card-pad">
+      <div class="card-head"><div><div class="card-title">متوسط الالتزام حسب القسم</div><div class="card-sub">متوسط بسيط لنسب المشاريع النشطة</div></div></div>
+      <div class="bars">
+        ${Object.keys(byDept).length ? Object.entries(byDept).map(([dept, arr]) => {
+          const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+          const s = statusOf(avg);
+          return `<div class="bar-row"><span>${esc(dept)}</span>
+            <div class="bar-track"><div class="bar-fill ${s === "excellent" ? "good" : s === "acceptable" ? "warn" : "bad"}" style="width:${Math.max(2, avg)}%"></div></div>
+            <span class="bar-val num">${fmtPct(avg)}</span></div>`;
+        }).join("") : `<div class="empty">${icon("chart")}<b>لا بيانات كافية</b>تظهر المقارنة بعد إدخال نتائج جولات القياس.</div>`}
+      </div>
+    </div>
+    <div class="card card-pad">
+      <div class="card-head"><div><div class="card-title">مقارنة خط الأساس بإعادة التدقيق</div><div class="card-sub">المشاريع التي أكملت جولتين</div></div></div>
+      ${withTwo.length ? `<div class="compare-bars">
+        ${withTwo.map((p) => {
+          const b = roundTotals(p, p.rounds[0]).rate, n = roundTotals(p, latestRound(p)).rate;
+          return `<div class="cmp-row">
+            <div><div class="cmp-label">${esc(p.code)} — ${esc(p.title)}</div>
+              <div class="cmp-track">
+                <div class="cmp-line"><div class="cmp-bar cmp-base"><i style="width:${b}%"></i></div><span class="cmp-val num">${fmtPct(b)}</span></div>
+                <div class="cmp-line"><div class="cmp-bar cmp-now"><i style="width:${n}%"></i></div><span class="cmp-val num">${fmtPct(n)}</span></div>
+              </div></div>
+            <div class="small ${n >= b ? "trend-up" : "trend-down"}">${n >= b ? "▲" : "▼"} ${round1(Math.abs(n - b))} نقطة</div>
+          </div>`;
+        }).join("")}
+      </div>` : `<div class="empty">${icon("chart")}<b>لا مقارنات متاحة</b>تحتاج المشاريع إلى جولتي قياس.</div>`}
+      <div class="legend mt-16"><div class="legend-row"><span class="legend-dot" style="background:#9db6bf"></span>خط الأساس</div><div class="legend-row"><span class="legend-dot" style="background:#13879c"></span>إعادة التدقيق</div></div>
+    </div>
+  </div>
+
+  <div class="card card-pad mt-16">
+    <div class="card-head"><div><div class="card-title">ملخص المشاريع</div><div class="card-sub">جاهز للطباعة والتقديم إلى مكتب الجودة</div></div></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>الرقم</th><th>المشروع</th><th>القسم</th><th>المرحلة</th><th>خط الأساس</th><th>الأحدث</th><th>التغيّر</th><th>الحالة</th></tr></thead>
+      <tbody>${DB.projects.map((p) => {
+        const b = p.rounds.length ? roundTotals(p, p.rounds[0]).rate : null;
+        const n = projectCompliance(p);
+        return `<tr class="row-click" data-open="${p.id}"><td class="num">${esc(p.code)}</td><td class="td-title">${esc(p.title)}</td><td>${esc(p.dept)}</td>
+          <td class="small">${p.stage}/7</td><td class="num">${fmtPct(b)}</td><td class="num">${fmtPct(n)}</td>
+          <td class="num ${n != null && b != null && n >= b ? "trend-up" : "trend-down"}">${n != null && b != null ? (n - b >= 0 ? "+" : "") + round1(n - b) : "—"}</td>
+          <td>${stateBadge(p.state)}</td></tr>`;
+      }).join("")}</tbody>
+    </table></div>
+  </div>`;
+}
+
+/* --------------------------------------------------------------------------
+   سجل الأحداث العام
+   -------------------------------------------------------------------------- */
+function viewLog() {
+  const evs = [];
+  DB.projects.forEach((p) => (p.events || []).forEach((e) => evs.push({ ...e, code: p.code, pid: p.id })));
+  evs.sort((a, b) => String(b.time).localeCompare(String(a.time)));
+  return `
+  ${pageHead("سجل الأحداث", "سجل غير قابل للتعديل ومحمي على الخادم.")}
+  <div class="card card-pad">
+    <div class="timeline">
+      ${evs.length ? evs.map((e) => `<div class="tl-item">
+        <div class="tl-time">${esc(e.time)} · المنفّذ: <b>${esc(userById(e.user).name)}</b> · <button class="link-btn" style="padding:0" data-open="${e.pid}">${esc(e.code)}</button></div>
+        <div class="tl-text"><b>${esc(e.action)}</b> — من «${esc(e.old)}» إلى «${esc(e.new)}»</div>
+      </div>`).join("") : `<div class="empty">${icon("clock")}<b>لا أحداث مسجّلة بعد</b>يُسجَّل كل إنشاء أو تعديل أو اعتماد تلقائيًا هنا.</div>`}
+    </div>
+  </div>`;
+}
+
+/* --------------------------------------------------------------------------
+   الدليل والمصطلحات
+   -------------------------------------------------------------------------- */
+function viewHelp() {
+  if (state.role === "creator") setTimeout(bridgeLoad, 60);
+  const terms = [
+    ["التدقيق السريري", "Clinical Audit", "أداة جودة تدرس الواقع مقابل معيار معتمد، وتكشف الفجوات، وتقترح تحسيناً، ثم تعيد القياس. هدفها تحسين الرعاية لا إنتاج معرفة جديدة."],
+    ["مشروع تدقيق سريري", "Audit Project", "وحدة عمل مستقلة لها فريق، نطاق، معايير، عينة، نتائج، خطة تحسين، وتقرير معتمد."],
+    ["المعيار", "Criterion", "عبارة قابلة للقياس تحدّد ما يُعدّ التزاماً صحيحاً، مع تعريف استيفاء وحد مستهدف."],
+    ["المعايير", "Criteria", "مجموعة المعايير التي تُقاس في المشروع. تُقاس نسبة تحقق كل معيار على حدة."],
+    ["نسبة الالتزام", "Compliance Rate", "عدد الحالات المستوفية ÷ عدد الحالات المنطبقة × 100."],
+    ["إعادة التدقيق", "Re-audit", "قياس ثانٍ بنفس المعايير ونفس وحدة القياس بعد تطبيق التوصيات، للمقارنة."],
+    ["التوصيات والمتابعة", "Recommendations", "توصيات موجهة للجهات المعنية بناءً على الفجوات، مع الجهة المسؤولة وموعد المتابعة."],
+    ["إعادة التقييم", "Re-evaluation", "قياس ثانٍ بنفس المعايير بعد تطبيق التوصيات، لمقارنة الأثر بعد تطبيق التوصيات."],
+    ["تحليل السبب الجذري", "Root Cause Analysis", "أداة «لماذا خمس مرات» لتتبع السبب حتى أصله القابل للمعالجة."],
+    ["وحدة القياس", "Measurement Unit", "ما الذي تُعدّه وحدة واحدة: متابعة، ملف، زيارة، عملية. لا تُخلط الوحدات في مؤشر واحد."],
+    ["الفجوة", "Gap", "الفرق بين الأداء الفعلي والمعيار المستهدف، ويُوصف بالأرقام لا بالانطباع."]
+  ];
+  return `
+  ${pageHead("الدليل والمصطلحات", "مرجع سريع للفريق: دورة التدقيق والمصطلحات الموحّدة.")}
+  <div class="card card-pad">
+    <div class="card-head"><div><div class="card-title">دورة التدقيق السريري — 7 مراحل</div><div class="card-sub">الترتيب ثابت، ويُعرض دائماً «المرحلة الحالية» و«الخطوة التالية»</div></div></div>
+    <div class="stepper">
+      ${CONFIG.stages.map((s, i) => `<div class="step done"><span class="dot"></span>${i + 1}. ${s}</div>`).join("")}
+    </div>
+    <div class="notice notice-blue mt-16">${icon("info")}<div>لا تنتقل إلى جمع البيانات قبل اعتماد المعايير. ولا تبدأ التوصيات قبل تحليل النتائج وتحديد السبب الجذري.</div></div>
+  </div>
+
+  <div class="card card-pad mt-16">
+    <div class="card-head"><div><div class="card-title">المصطلحات الموحّدة</div><div class="card-sub">استخدم هذه الصياغات في الواجهة والتقارير الرسمية</div></div></div>
+    <div class="glossary-grid">
+      ${terms.map(([ar, en, d]) => `<div class="term-card"><b>${ar}</b><div class="en">${en}</div><p>${d}</p></div>`).join("")}
+    </div>
+    <div class="notice mt-16">${icon("info")}<div>«أوديت» مقبولة داخلياً لكن لا تُستخدم في التقارير الرسمية. الاسم الرسمي: <b>التدقيق السريري</b>، والوحدة: <b>مشروع تدقيق سريري</b>.</div></div>
+  </div>
+
+  <div class="card card-pad mt-16">
+    <div class="card-head"><div><div class="card-title">الخصوصية وحماية البيانات</div><div class="card-sub">قواعد إلزامية قبل أي إدخال أو رفع</div></div></div>
+    <div class="grid grid-2">
+      <div class="notice notice-red">${icon("lock")}<div><b>يمنع رفع أسماء المرضى أو أرقام الملفات أو الصور أو أي معلومة تعريفية.</b> استخدم رموز دراسة مجهولة. أي تعريف مباشر يعرّض المشروع لخطر قانوني وأخلاقي.</div></div>
+      <div class="notice notice-blue">${icon("shield")}<div>تتطلب المنصة HTTPS، وصلاحيات على الخادم لا في الواجهة فقط، وانتهاء جلسة، وسجل تدقيق غير قابل للتعديل، وتشفير النسخ الاحتياطية.</div></div>
+    </div>
+  </div>
+
+  ${state.role === "creator" ? `<div class="card card-pad mt-16">
+    <div class="card-head"><div><div class="card-title">ربط Google Drive (OAuth)</div><div class="card-sub">الطريقة الأساسية: ربط حساب ClinicalAudit.Syria@gmail.com بصلاحية رفع دائمة إلى مجلد «clinical audit data».</div></div></div>
+    <div id="oauthStatus" class="notice notice-blue">${icon("info")}<div>جارٍ قراءة حالة الربط…</div></div>
+    <div class="row-actions mt-8">
+      <button type="button" class="btn btn-soft" data-act="oauth-connect">${icon("check")} ربط الحساب الآن</button>
+      <button type="button" class="btn btn-ghost" data-act="oauth-load">${icon("refresh")} تحديث الحالة</button>
+    </div>
+    <div class="hint mt-8">اضغط «ربط الحساب الآن» ← اختر حساب <span dir="ltr">ClinicalAudit.Syria@gmail.com</span> ← وافق على صلاحية Drive. سيُحفظ رمز التحديث تلقائياً على الخادم ويصبح كل مستند يُرفع فوراً إلى مجلد المشروع.</div>
+  </div>
+  <div class="card card-pad mt-16">
+    <div class="card-head"><div><div class="card-title">إعداد الرفع التلقائي إلى Google Drive</div><div class="card-sub">يُرفع كل مستند تلقائياً إلى حساب ClinicalAudit.Syria@gmail.com داخل مجلد «clinical audit data» ثم مجلد المشروع.</div></div></div>
+    <div id="bridgeStatus" class="notice notice-blue">${icon("info")}<div>جارٍ قراءة حالة الاتصال…</div></div>
+    <div class="grid grid-2 mt-16">
+      <div class="field"><label for="bridgeUrl">رابط تطبيق Apps Script (Web App URL)</label><input class="input" id="bridgeUrl" type="url" dir="ltr" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <div class="field"><label for="bridgeToken">رمز الحماية (Token)</label><input class="input" id="bridgeToken" type="text" dir="ltr" placeholder="نفس الرمز المكتوب داخل السكربت"></div>
+    </div>
+    <div class="row-actions mt-8">
+      <button type="button" class="btn btn-soft" data-act="bridge-save">${icon("check")} حفظ إعدادات Drive</button>
+      <button type="button" class="btn btn-ghost" data-act="bridge-load">${icon("refresh")} تحديث الحالة</button>
+      <button type="button" class="btn btn-ghost" data-act="bridge-copy">${icon("copy")} نسخ سكربت Apps Script</button>
+    </div>
+    <div class="hint mt-8">خطوات التهيئة: افتح <span dir="ltr">script.google.com</span> بحساب ClinicalAudit.Syria@gmail.com ← مشروع جديد ← الصق السكربت ← Deploy ← Web app ← Execute as: me ← Who has access: Anyone ← انسخ الرابط ورمز الحماية ثم احفظهما هنا.</div>
+    <textarea id="bridgeScript" class="input mt-8" rows="8" readonly dir="ltr" style="font-family:monospace;font-size:12px;line-height:1.5"></textarea>
+  </div>` : ""}`;
+}
+
+
+async function oauthLoad() {
+  const box = document.getElementById("oauthStatus");
+  if (!box) return;
+  try {
+    const s = await api("GET", "/api/drive/status");
+    box.className = "notice " + (s.ok ? "notice-blue" : "notice-red");
+    box.innerHTML = icon(s.ok ? "check" : "info") + "<div>" +
+      (s.ok
+        ? "متصل ويعمل عبر " + esc(s.mode || "oauth") + " — المجلد الجذري: «" + esc(s.root || "clinical audit data") + "»."
+        : "غير متصل بعد: " + esc(s.error || "يلزم الربط") + ". اضغط «ربط الحساب الآن».") +
+      "</div>";
+  } catch (e) {
+    box.className = "notice notice-red";
+    box.innerHTML = icon("info") + "<div>تعذّر قراءة حالة الربط: " + esc(e.message) + "</div>";
+  }
+}
+
+async function oauthConnect() {
+  try {
+    const r = await api("GET", "/api/drive/oauth/start");
+    if (r && r.url) window.open(r.url, "_blank");
+    else toast("تعذّر توليد رابط الربط.", "bad");
+  } catch (e) { toast("تعذّر بدء الربط: " + e.message, "bad"); }
+}
+
+async function bridgeLoad() {
+  const box = document.getElementById("bridgeStatus");
+  try {
+    const r = await api("GET", "/api/drive/bridge");
+    const ta = document.getElementById("bridgeScript");
+    if (ta) ta.value = r.script || "";
+    const u = document.getElementById("bridgeUrl");
+    const tk = document.getElementById("bridgeToken");
+    if (u && r.url) u.value = r.url;
+    if (tk && r.token) tk.value = r.token;
+    if (box) {
+      box.className = "notice " + (r.configured ? "notice-blue" : "notice-red");
+      box.innerHTML = icon(r.configured ? "check" : "info") + "<div>" +
+        (r.configured
+          ? "الرفع التلقائي مُهيّأ ويعمل عبر تطبيق Apps Script. كل مستند يُرفع فوراً إلى مجلد المشروع."
+          : "الرفع التلقائي غير مُهيّأ بعد. أنشئ تطبيق Apps Script بالخطوات أدناه ثم الصق الرابط ورمز الحماية.") +
+        "</div>";
+    }
+  } catch (e) {
+    if (box) { box.className = "notice notice-red"; box.innerHTML = icon("info") + "<div>تعذّر قراءة الحالة: " + e.message + "</div>"; }
+  }
+}
+
+async function bridgeSave() {
+  const url = (document.getElementById("bridgeUrl") || {}).value || "";
+  const token = (document.getElementById("bridgeToken") || {}).value || "";
+  if (!url.trim()) { toast("أدخل رابط تطبيق Apps Script أولاً.", "warn"); return; }
+  try {
+    await api("PUT", "/api/drive/bridge", { url: url.trim(), token: token.trim() });
+    toast("حُفظت إعدادات الرفع التلقائي إلى Google Drive.");
+    bridgeLoad();
+  } catch (e) { toast("تعذّر حفظ الإعدادات: " + e.message, "bad"); }
+}
+
+function bridgeCopy() {
+  const ta = document.getElementById("bridgeScript");
+  if (!ta) return;
+  ta.select();
+  try { document.execCommand("copy"); toast("نُسخ سكربت Apps Script إلى الحافظة."); }
+  catch (e) { toast("انسخ النص يدوياً من المربع.", "warn"); }
+}
+
+/* --------------------------------------------------------------------------
+   الصلاحيات والمسؤوليات
+   -------------------------------------------------------------------------- */
+function loadSubteams() { return DB.subteams || []; }
+async function saveSubteams(a) {
+  try {
+    const r = await api("PUT", "/api/subteams", { subteams: a });
+    DB.subteams = (r && r.subteams) || a;
+  } catch (e) { toast("تعذّر حفظ الفرق الفرعية: " + e.message, "bad"); }
+}
+
+function viewTeam() {
+  const users = DB.users || [];
+  const teams = DB.subteams || [];
+  const isCreator = state.role === "creator";
+  const addCard = `<div class="card card-pad">
+      <div class="card-head"><div><div class="card-title">إضافة عضو جديد</div><div class="card-sub">يُضاف العضو إلى قائمة الأعضاء، ثم يوزّعه منشئ الموقع على فريق فرعي.</div></div></div>
+      <form id="addMemberForm" class="auth-form">
+        <div class="field"><label for="amName">الاسم الثلاثي</label><input class="input" id="amName" type="text" required></div>
+        <div class="field"><label for="amEmail">البريد الإلكتروني</label><input class="input" id="amEmail" type="email" required></div>
+        <div class="field"><label for="amPass">كلمة المرور المؤقتة</label><input class="input" id="amPass" type="password" required><div class="hint">8 أحرف على الأقل، وتشمل حرفاً ورقماً ورمزاً واحداً على الأقل.</div></div>
+        <div class="field"><label>الصورة الشخصية (اختياري)</label><label class="btn btn-soft file-btn">${icon("upload")} رفع صورة<input type="file" id="amAvatar" accept="image/png,image/jpeg,image/webp"></label></div>
+        <button class="btn btn-primary" type="submit">${icon("plus")} إضافة العضو</button>
+      </form>
+    </div>`;
+  const membersCard = `<div class="card card-pad mt-16">
+      <div class="card-head"><div><div class="card-title">قائمة الأعضاء</div><div class="card-sub">${users.length} عضواً · الصورة أعلى الاسم والبريد ورقم الفريق</div></div></div>
+      ${users.length ? `<div class="members-grid">${users.map((u) => `<div class="member-card">
+        <div class="member-avatar">${u.avatar ? `<img src="${esc(u.avatar)}" alt="${esc(u.name)}">` : esc((u.name || "?").charAt(0))}</div>
+        <div class="member-info"><b>${esc(u.name)}</b><div class="em">${esc(u.email)}</div><div class="member-team">رقم الفريق: <b class="num">${esc(u.teamNo || "—")}</b></div></div>
+        <div class="member-actions">
+          ${u.role === "creator" ? `<span class="badge st-teal">منشئ الموقع</span>` : ""}
+          ${u.id === state.user.id ? `<span class="badge st-neutral">أنت</span>` : ""}
+          ${isCreator && u.id !== state.user.id ? `<button class="btn btn-danger btn-sm" data-act="expel-member" data-id="${u.id}">${icon("trash")} إزالة نهائية</button>` : ""}
+        </div>
+      </div>`).join("")}</div>` : `<div class="empty">${icon("users")}<b>لا أعضاء بعد</b>أضف أول عضو من النموذج أعلاه.</div>`}
+    </div>`;
+  const subteamsCard = `<div class="card card-pad mt-16">
+      <div class="card-head"><div><div class="card-title">الفرق الفرعية</div><div class="card-sub">رقم الفريق وقائده وأعضاؤه${isCreator ? " — يمكنك الإنشاء والتعديل والحذف" : " — للقراءة فقط"}</div></div></div>
+      ${teams.length ? teams.map((st, i) => `<div class="subteam-row">
+        <div class="subteam-badge">${esc(st.teamNo || (i + 1))}</div>
+        <div style="flex:1">
+          <b>${esc(st.name || ("فريق رقم " + (st.teamNo || (i + 1))))}</b>
+          <div class="small muted">قائد الفريق: ${esc(st.leader || "—")}</div>
+          <div class="small muted subteam-members">الأعضاء: ${esc(Array.isArray(st.members) ? st.members.join("، ") : (st.members || "—"))}</div>
+        </div>
+        ${isCreator ? `<button class="btn btn-ghost btn-sm" data-act="del-subteam" data-id="${st.id}">${icon("trash")} حذف</button>` : ""}
+      </div>`).join("") : `<div class="empty">${icon("users")}<b>لا فرق فرعية بعد</b>${isCreator ? "أنشئ أول فريق فرعي من النموذج أدناه." : "لم يُنشئ منشئ الموقع فرقاً بعد."}</div>`}
+      ${isCreator ? `<div class="divider"></div>
+      <form id="addSubteamForm" class="form-grid" style="grid-template-columns:0.6fr 1.1fr 1fr 1.4fr auto;align-items:end;gap:12px">
+        <div class="field" style="margin:0"><label for="stTeamNo">رقم الفريق</label><input class="input" id="stTeamNo" type="text" placeholder="001"></div>
+        <div class="field" style="margin:0"><label for="stName">اسم الفريق الفرعي</label><input class="input" id="stName" type="text" required placeholder="مثال: فريق العناية المركزة"></div>
+        <div class="field" style="margin:0"><label for="stLeader">قائد الفريق</label><input class="input" id="stLeader" type="text" placeholder="اسم القائد"></div>
+        <div class="field" style="margin:0"><label for="stMembers">الأعضاء</label><input class="input" id="stMembers" type="text" placeholder="أسماء الأعضاء مفصولة بفاصلة"></div>
+        <button class="btn btn-primary" type="submit">${icon("plus")} إضافة فريق</button>
+      </form>` : ""}
+    </div>`;
+  return `
+  ${pageHead("أعضاء الفريق", `${users.length} عضواً · ${teams.length} فرق فرعية`, "")}
+  ${addCard}
+  ${membersCard}
+  ${subteamsCard}`;
+}
+
+/* --------------------------------------------------------------------------
+   النوافذ المنبثقة والتنبيهات
+   -------------------------------------------------------------------------- */
+function openModal(html) {
+  $("#modalRoot").innerHTML = `<div class="modal-back" data-close-modal><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  document.body.style.overflow = "hidden";
+}
+function closeModal() {
+  $("#modalRoot").innerHTML = "";
+  document.body.style.overflow = "";
+}
+function toast(msg, type = "") {
+  const el = document.createElement("div");
+  el.className = "toast " + type;
+  el.innerHTML = `${icon(type === "bad" ? "alert" : type === "warn" ? "info" : "check")}<span>${esc(msg)}</span>`;
+  $("#toastRoot").appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(8px)"; el.style.transition = ".3s"; }, 3600);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function modalApprove(id) {
+  const p = projectById(id);
+  openModal(`
+    <div class="modal-head"><h3>اعتماد المشروع</h3><button class="btn btn-ghost btn-icon" data-close-modal>${icon("x")}</button></div>
+    <div class="modal-body">
+      <p>أنت على وشك اعتماد <b>${esc(p.code)} — ${esc(p.title)}</b>.</p>
+      <div class="notice notice-blue mt-16">${icon("info")}<div>الاعتماد يُثبّت المعايير والنتائج الحالية. أي تعديل لاحق يُسجّل كإصدار جديد ولا يغيّر النتائج المعتمدة.</div></div>
+      <div class="mt-16"><div class="small bold mb-8">سلسلة الاعتماد (تُسجَّل باسم المستخدم والتاريخ)</div>
+        <div class="table-wrap"><table style="min-width:0"><thead><tr><th>المرحلة</th><th>المسؤول</th><th>الحالة</th></tr></thead><tbody>
+          <tr><td>الفريق</td><td>${esc((p.leader || userById(p.owner).name))}</td><td><span class="badge st-excellent">مكتمل</span></td></tr>
+          <tr><td>قائد الفريق</td><td>${esc((p.leader || userById(p.owner).name))}</td><td><span class="badge st-neutral">بانتظار</span></td></tr>
+          <tr><td>الجهة السريرية</td><td>رئيس القسم</td><td><span class="badge st-neutral">بانتظار</span></td></tr>
+          <tr><td>مكتب الجودة</td><td>${esc(state.user.name)}</td><td><span class="badge st-info">المرحلة الحالية</span></td></tr>
+        </tbody></table></div>
+        <div class="hint mt-8">يُسجَّل الاعتماد النهائي باسم المستخدم والتاريخ؛ ويمكن لاحقاً فرض سلسلة اعتماد كاملة على الخادم.</div></div>
+      <div class="field mt-16"><label>ملاحظة الاعتماد (اختياري)</label><textarea class="textarea" id="approveNote" placeholder="مثال: اعتُمدت المعايير ومصادرها قبل جمع البيانات."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" data-act="approve-confirm" data-id="${id}">${icon("check")} تأكيد الاعتماد</button>
+      <button class="btn btn-ghost" data-close-modal>إلغاء</button>
+    </div>`);
+}
+function modalArchive(id) {
+  const p = projectById(id);
+  openModal(`
+    <div class="modal-head"><h3>أرشفة المشروع</h3><button class="btn btn-ghost btn-icon" data-close-modal>${icon("x")}</button></div>
+    <div class="modal-body">
+      <p>أرشفة <b>${esc(p.code)}</b> تجعله للقراءة فقط وتحفظه في السجل. لا يمكن الحذف النهائي.</p>
+      <div class="field mt-16"><label>سبب الأرشفة <span class="req">*</span></label><textarea class="textarea" id="archiveReason" placeholder="اذكر السبب بوضوح ليُسجّل في سجل الأحداث."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" data-act="archive-confirm" data-id="${id}">${icon("archive")} تأكيد الأرشفة</button>
+      <button class="btn btn-ghost" data-close-modal>إلغاء</button>
+    </div>`);
+}
+function modalUpload(id) {
+  openModal(`
+    <div class="modal-head"><h3>رفع مرفق</h3><button class="btn btn-ghost btn-icon" data-close-modal>${icon("x")}</button></div>
+    <div class="modal-body">
+      <div class="notice notice-red">${icon("lock")}<div><b>يمنع رفع أسماء المرضى أو أرقام الملفات أو الصور أو أي معلومة تعريفية.</b> استخدم رموز دراسة مجهولة فقط.</div></div>
+      <div class="field mt-16"><label>الملف</label><label class="btn btn-soft file-btn">${icon("upload")} رفع مستند<input type="file" id="uploadFile" accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg"></label>
+        <div class="hint">الأنواع المسموحة: ${CONFIG.allowedAttachmentTypes.join("، ")} · الحد الأقصى ${CONFIG.maxAttachmentMB} ميغابايت. تُمنع الملفات التنفيذية والماكرو.</div></div>
+      <div class="field mt-16"><label>درجة الحساسية</label><select class="select" id="uploadSens"><option>داخلي</option><option>داخلي — بلا معرّفات</option><option>مقيّد — صلاحيات محدودة</option></select></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" data-act="upload-confirm" data-id="${id}">${icon("upload")} رفع</button>
+      <button class="btn btn-ghost" data-close-modal>إلغاء</button>
+    </div>`);
+}
+function modalLogout() {
+  openModal(`
+    <div class="modal-head"><h3>تسجيل الخروج</h3><button class="btn btn-ghost btn-icon" data-close-modal>${icon("x")}</button></div>
+    <div class="modal-body"><p>سيتم إنهاء الجلسة الحالية وإعادتك إلى شاشة الدخول.</p></div>
+    <div class="modal-foot"><button class="btn btn-dark" data-act="logout-confirm">${icon("logout")} خروج</button><button class="btn btn-ghost" data-close-modal>إلغاء</button></div>`);
+}
+
+/* تصدير ملخص (CSV بسيط) — لا يحتوي أي بيانات مرضى */
+function exportSummary() {
+  const rows = [["الرقم", "المشروع", "القسم", "قائد الفريق", "المرحلة", "الحالة", "نسبة الالتزام", "عدد المعايير", "عدد التوصيات"]];
+  DB.projects.filter((p) => p.owner === (state.user && state.user.id))
+    .forEach((p) => rows.push([p.code, p.title, p.dept, p.leader || "", p.stage + "/7", p.state, fmtPct(projectCompliance(p)), p.criteria.length, (p.recommendations || []).length]));
+  const csv = "\ufeff" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ملخص_التدقيق_السريري.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("تم تصدير ملخص المشاريع التي أنشأتها فقط (بلا بيانات مرضى).");
+}
+
+/* --------------------------------------------------------------------------
+   تقرير المشروع الكامل (PDF) ورفعه إلى Google Drive
+   -------------------------------------------------------------------------- */
+function projectReportHTML(p) {
+  const r = latestRound(p);
+  const rows = (p.criteria || []).map((c) => {
+    const x = r && r.results ? r.results[c.id] : null;
+    const den = x ? (Number(x.app) || 0) - (Number(x.undoc) || 0) : 0;
+    const rate = x && den > 0 ? (Number(x.met) || 0) / den * 100 : null;
+    return `<tr><td>${esc(c.no)}</td><td>${esc(c.text)}</td><td>${esc(c.definition || "—")}</td><td>${esc(c.target)}%</td><td>${rate == null ? "—" : rate.toFixed(1) + "%"}</td></tr>`;
+  }).join("");
+  const recs = (p.recommendations || []).map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.gap)}</td><td>${esc(x.text)}</td><td>${esc(x.entity || "—")}</td><td>${esc(x.priority || "—")}</td><td>${esc(x.due || "—")}</td></tr>`).join("");
+  const rcs = (p.rootCauses || []).map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.gap)}</td><td>${esc(x.cause || "—")}</td><td>${esc((x.why || []).filter(Boolean).join(" ← ") || "—")}</td></tr>`).join("");
+  const tot = roundTotals(p, r);
+  const sec = (title, body) => `<section><h2>${title}</h2>${body}</section>`;
+  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(p.code)} — تقرير التدقيق</title>
+<style>
+@page{size:A4;margin:18mm}
+body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#12303a;line-height:1.8;font-size:12px}
+h1{font-size:22px;color:#0f6b7d;margin:0 0 4px}
+h2{font-size:15px;color:#0f6b7d;border-bottom:2px solid #d7e8ec;padding-bottom:5px;margin:22px 0 10px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 26px;font-size:12px;margin-bottom:8px}
+.meta b{color:#0a3d4d}
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11.5px}
+th,td{border:1px solid #cfe0e4;padding:6px 8px;text-align:right;vertical-align:top}
+th{background:#eef6f8;color:#0a3d4d}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0f6b7d;padding-bottom:10px}
+.badge{display:inline-block;background:#eef6f8;border:1px solid #cfe0e4;border-radius:8px;padding:3px 10px;font-size:11px}
+.foot{margin-top:26px;border-top:1px solid #cfe0e4;padding-top:8px;font-size:10.5px;color:#6b8790}
+</style></head><body>
+<div class="head"><div><h1>تقرير مشروع التدقيق السريري</h1>
+<div class="meta"><span><b>الرقم:</b> ${esc(p.code)}</span><span><b>الحالة:</b> ${esc(p.state)}</span><span><b>المرحلة:</b> ${esc(p.stage)}/7</span></div></div>
+<div class="badge">مشفى المواساة الجامعي — Clinical Audit-Syria</div></div>
+
+${sec("تعريف المشروع", `<div class="meta"><span><b>العنوان:</b> ${esc(p.title)}</span><span><b>القسم:</b> ${esc(p.dept)}</span><span><b>قائد الفريق:</b> ${esc(p.leader || "—")}</span><span><b>الأعضاء:</b> ${esc((p.memberNames || []).filter(Boolean).join("، ") || "—")}</span></div>
+<p><b>الهدف:</b> ${esc(p.objective || "—")}</p><p><b>الخلفية:</b> ${esc(p.background || "—")}</p>`)}
+
+${sec("النطاق", `<p><b>المستهدفون:</b> ${esc(p.scope.population || "—")}</p><p><b>وصف العينة:</b> ${esc(p.scope.sample || "—")}</p>`)}
+
+${sec("خطة جمع البيانات والعينة", `<div class="meta"><span><b>فترة الجمع:</b> ${esc((p.dcStart || "—") + " — " + (p.dcEnd || "—"))}</span><span><b>عدد أيام الجمع:</b> ${esc(collectionDays(p) == null ? "—" : collectionDays(p))}</span><span><b>الطريقة:</b> ${esc(p.scope.method || "—")}</span><span><b>حجم العينة:</b> ${esc(r ? r.sample : "—")}</span></div>`)}
+
+${sec("المعايير ونتائج التحليل", `<table><thead><tr><th>الرقم</th><th>نص المعيار</th><th>تعريف الاستيفاء</th><th>الحد المستهدف</th><th>نسبة التحقق</th></tr></thead><tbody>${rows || `<tr><td colspan="5">لا معايير</td></tr>`}</tbody></table>
+<p style="margin-top:8px"><b>النسبة المرجّحة:</b> ${tot.rate == null ? "—" : tot.rate.toFixed(1) + "%"} · <b>المستوفى:</b> ${tot.met} · <b>المنطبق:</b> ${tot.app} · <b>غير موثق:</b> ${tot.undoc}</p>
+<p><b>ملاحظات منهجية:</b> ${esc(p.notes || "—")}</p>`)}
+
+${sec("تحليل السبب الجذري", `<table><thead><tr><th>#</th><th>الفجوة</th><th>السبب المباشر</th><th>لماذا ×5</th></tr></thead><tbody>${rcs || `<tr><td colspan="4">—</td></tr>`}</tbody></table>`)}
+
+${sec("التوصيات والمتابعة", `<table><thead><tr><th>#</th><th>الفجوة</th><th>التوصية</th><th>الجهة</th><th>الأولوية</th><th>موعد المتابعة</th></tr></thead><tbody>${recs || `<tr><td colspan="6">—</td></tr>`}</tbody></table>`)}
+
+${sec("إعادة التقييم", `<div class="meta"><span><b>موعد إعادة التقييم:</b> ${esc(p.reauditDate || "—")}</span><span><b>الاعتماد:</b> ${esc((p.approval && p.approval.decision) || "—")}</span></div><p>${esc(p.reauditNotes || "—")}</p>`)}
+
+<div class="foot">وُلّد هذا التقرير آلياً من لوحة Clinical Audit-Syria — مشفى المواساة الجامعي، دمشق. لا يحتوي أي معرّفات مرضى.</div>
+</body></html>`;
+}
+
+function generateProjectPDF(p) {
+  const html = projectReportHTML(p);
+  const w = window.open("", "_blank");
+  if (!w) { toast("تعذّر فتح نافذة التقرير. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.", "warn"); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+  setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 500);
+  toast("تم توليد تقرير المشروع. اختر «حفظ كـ PDF» من نافذة الطباعة.");
+}
+
+function printProject(id) {
+  const p = projectById(id);
+  if (p) generateProjectPDF(p);
+}
+
+async function driveUpload(p) {
+  try {
+    const r = await api("POST", "/api/projects/" + encodeURIComponent(p.id) + "/drive-report");
+    if (r && r.file) toast("رُفع تقرير المشروع إلى Google Drive في مجلد " + p.code + ".");
+    else toast("تعذّر الرفع إلى Drive: " + ((r && r.message) || "غير مهيأ"), "bad");
+  } catch (e) { toast("تعذّر الرفع إلى Drive: " + e.message, "bad"); }
+}
+async function driveAll(p) {
+  try {
+    const r = await api("POST", "/api/projects/" + encodeURIComponent(p.id) + "/drive-all");
+    const list = (r && r.results) || [];
+    const good = list.filter((x) => x.ok).length;
+    if (good) toast("رُفعت " + good + " من " + list.length + " مستنداً إلى Google Drive في مجلد " + p.code + ".");
+    else toast("لا مستندات مرفوعة أو تعذّر الرفع إلى Drive.", "warn");
+  } catch (e) { toast("تعذّر رفع المستندات إلى Drive: " + e.message, "bad"); }
+}
+
+/* --------------------------------------------------------------------------
+   الأحداث
+   -------------------------------------------------------------------------- */
+function bindGlobalEvents() {
+  document.addEventListener("click", async (e) => {
+    const t = e.target.closest("[data-nav],[data-open],[data-tab],[data-act],[data-flt-status],[data-wstep],[data-auth-tab],[data-del-mname],[data-del-rc],[data-del-rec],[data-del-crit],[data-del-action],[data-close-modal]");
+    if (!t) return;
+
+    if (t.hasAttribute("data-close-modal")) {
+      if (t.classList.contains("modal-back") && e.target !== t) return;
+      closeModal(); return;
+    }
+
+    if (t.dataset.authTab) { showAuthTab(t.dataset.authTab); return; }
+    if (t.dataset.wstep != null) {
+      syncWizardFromDOM();
+      state.wizard.step = Number(t.dataset.wstep);
+      state.wizard.errors = {};
+      renderShell(); return;
+    }
+    if (t.dataset.delMname != null) {
+      syncWizardFromDOM();
+      const d = state.wizard.data;
+      d.memberNames.splice(Number(t.dataset.delMname), 1);
+      if (!d.memberNames.length) d.memberNames = [""];
+      renderShell(); return;
+    }
+    if (t.dataset.delRc) {
+      syncWizardFromDOM();
+      state.wizard.data.rootCauses = (state.wizard.data.rootCauses || []).filter((x) => x.id !== t.dataset.delRc);
+      renderShell(); return;
+    }
+    if (t.dataset.delRec) {
+      syncWizardFromDOM();
+      state.wizard.data.recommendations = (state.wizard.data.recommendations || []).filter((x) => x.id !== t.dataset.delRec);
+      renderShell(); return;
+    }
+
+    if (t.dataset.nav) {
+      const v = t.dataset.nav;
+      if (v === "new") { startWizard("new"); return; }
+      state.view = v; state.detailTab = "overview";
+      if (v !== "project") state.projectId = null;
+      $("#sidebar").classList.remove("open");
+      renderShell(); return;
+    }
+    if (t.dataset.open) {
+      state.view = "project"; state.projectId = t.dataset.open; state.detailTab = "overview";
+      renderShell(); return;
+    }
+    if (t.dataset.tab) {
+      state.detailTab = t.dataset.tab;
+      renderShell(); return;
+    }
+    if (t.dataset.fltStatus != null) {
+      state.filters.status = t.dataset.fltStatus;
+      renderShell(); return;
+    }
+    if (t.dataset.delCrit) {
+      syncWizardFromDOM();
+      state.wizard.data.criteria = state.wizard.data.criteria.filter((c) => c.id !== t.dataset.delCrit);
+      renderShell(); return;
+    }
+    if (t.dataset.delAction) {
+      syncWizardFromDOM();
+      state.wizard.data.actions = state.wizard.data.actions.filter((a) => a.id !== t.dataset.delAction);
+      renderShell(); return;
+    }
+
+    const act = t.dataset.act;
+    switch (act) {
+      case "new": startWizard("new"); break;
+      case "edit": startWizard("edit", t.dataset.id); break;
+      case "approve": modalApprove(t.dataset.id); break;
+      case "submit": {
+        const p = projectById(t.dataset.id);
+        const oldState = p.state;
+        p.state = "قيد مراجعة";
+        p.events.push({ user: state.user.id, action: "إرسال المشروع للمراجعة", time: new Date().toLocaleString("ar-SY-u-nu-latn"), old: oldState, new: "قيد مراجعة" });
+        saveDB(); renderShell(); toast("أُرسل المشروع إلى قائد الفريق للمراجعة والاعتماد.");
+        break;
+      }
+      case "approve-confirm": {
+        const p = projectById(t.dataset.id);
+        p.state = "معتمد";
+        p.approval = { by: state.user.id, date: todayISO(), decision: "معتمد", note: ($("#approveNote") || {}).value || "" };
+        p.approvals = p.approvals || [];
+        p.approvals.push({ stage: "مكتب الجودة", user: state.user.id, date: todayISO(), decision: "معتمد", note: p.approval.note });
+        p.events.push({ user: state.user.id, action: "اعتماد المشروع", time: new Date().toLocaleString("ar-SY-u-nu-latn"), old: "قيد مراجعة", new: "معتمد" });
+        saveDB(); closeModal(); renderShell(); toast("اعتُمد المشروع وسُجّل باسمك وتاريخ اليوم."); break;
+      }
+      case "archive": modalArchive(t.dataset.id); break;
+      case "archive-confirm": {
+        const reason = ($("#archiveReason") || {}).value || "";
+        if (!reason.trim()) { toast("سبب الأرشفة مطلوب.", "warn"); break; }
+        const p = projectById(t.dataset.id);
+        p.state = "مغلق";
+        p.events.push({ user: state.user.id, action: "أرشفة المشروع — السبب: " + reason, time: new Date().toLocaleString("ar-SY-u-nu-latn"), old: p.state, new: "مغلق" });
+        saveDB(); closeModal(); renderShell(); toast("أُرشف المشروع مع تسجيل السبب."); break;
+      }
+      case "upload": modalUpload(t.dataset.id); break;
+      case "upload-confirm": {
+        const f = ($("#uploadFile") || {}).files;
+        if (!f || !f[0]) { toast("اختر ملفاً أولاً.", "warn"); break; }
+        const file = f[0];
+        const ext = file.name.split(".").pop().toLowerCase();
+        if (!CONFIG.allowedAttachmentTypes.includes(ext)) { toast("نوع الملف غير مسموح.", "bad"); break; }
+        if (file.size > CONFIG.maxAttachmentMB * 1024 * 1024) { toast(`الحجم يتجاوز ${CONFIG.maxAttachmentMB} ميغابايت.`, "bad"); break; }
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("sensitivity", ($("#uploadSens") || {}).value || "داخلي");
+        try {
+          const r = await api("POST", "/api/projects/" + encodeURIComponent(t.dataset.id) + "/attachments", fd);
+          await refreshState();
+          closeModal(); renderShell();
+          if (r.drive && r.drive.ok) toast("رُفع المرفق وحُفظ تلقائياً في Google Drive داخل مجلد المشروع.");
+          else toast("رُفع المرفق على الخادم، وتعذّر الرفع التلقائي إلى Drive: " + ((r.driveError && r.driveError.message) || "غير مهيأ"), "warn");
+        } catch (err) { toast("تعذّر رفع المرفق: " + err.message, "bad"); }
+        break;
+      }
+      case "download": toast("يُسجّل التنزيل ويُقيَّد حسب الصلاحية."); break;
+      case "print": window.print(); break;
+      case "print-project": printProject(t.dataset.id); break;
+      case "gen-pdf": { const p = projectById(t.dataset.id); if (p) generateProjectPDF(p); break; }
+      case "drive-upload": { const p = projectById(t.dataset.id); if (p) driveUpload(p); break; }
+      case "drive-report": { const p = projectById(t.dataset.id); if (p) driveUpload(p); break; }
+      case "drive-all": { const p = projectById(t.dataset.id); if (p) driveAll(p); break; }
+      case "bridge-load": bridgeLoad(); break;
+      case "bridge-save": bridgeSave(); break;
+      case "bridge-copy": bridgeCopy(); break;
+      case "expel-member": removeMember(t.dataset.id); break;
+      case "expel-confirm": expelMember(t.dataset.id); break;
+      case "del-subteam": {
+        if (state.role !== "creator") { toast("تعديل الفرق الفرعية من صلاحية منشئ الموقع فقط.", "warn"); break; }
+        const teams = loadSubteams().filter((x) => x.id !== t.dataset.id);
+        await saveSubteams(teams); renderShell(); toast("حُذف الفريق الفرعي."); break;
+      }
+      case "export": exportSummary(); break;
+      case "logout": modalLogout(); break;
+      case "logout-confirm": { closeModal(); doLogout(); break; }
+      case "wiz-cancel": {
+        openModal(`
+          <div class="modal-head"><h3>إلغاء المشروع</h3><button class="btn btn-ghost btn-icon" data-close-modal>${icon("x")}</button></div>
+          <div class="modal-body"><p>هل تريد إلغاء العمل على هذا المشروع؟ لن تُحفظ التعديلات غير المحفوظة.</p></div>
+          <div class="modal-foot">
+            <button class="btn btn-danger" data-act="wiz-cancel-confirm">${icon("x")} تأكيد الإلغاء</button>
+            <button class="btn btn-ghost" data-close-modal>رجوع</button>
+          </div>`);
+        break;
+      }
+      case "wiz-cancel-confirm": {
+        closeModal(); state.wizard = null; state.view = "projects"; renderShell(); toast("أُلغي المشروع ولم تُحفظ التعديلات.");
+        break;
+      }
+      case "wiz-prev": syncWizardFromDOM(); state.wizard.step = Math.max(0, state.wizard.step - 1); state.wizard.errors = {}; renderShell(); break;
+      case "wiz-next": wizardNext(); break;
+      case "wiz-save": wizardSave(); break;
+      case "save-draft": wizardSaveDraft(); break;
+      case "add-mname": syncWizardFromDOM(); state.wizard.data.memberNames.push(""); renderShell(); break;
+      case "add-rootcause": syncWizardFromDOM(); state.wizard.data.rootCauses = state.wizard.data.rootCauses || []; state.wizard.data.rootCauses.push(blankRootCause()); renderShell(); break;
+      case "add-rec": syncWizardFromDOM(); state.wizard.data.recommendations = state.wizard.data.recommendations || []; state.wizard.data.recommendations.push(blankRecommendation()); renderShell(); break;
+      case "del-member": removeMember(t.dataset.id); break;
+      case "add-crit": syncWizardFromDOM(); state.wizard.data.criteria.push(blankCriterion(state.wizard.data.criteria.length + 1)); renderShell(); break;
+      default: break;
+    }
+  });
+
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (!t || !t.id || !state.wizard) return;
+    if (t.id === "criteriaDoc" || t.id === "resultsDoc" || t.id === "recDoc") {
+      if (t.files && t.files[0]) {
+        state.wizard._files = state.wizard._files || {};
+        state.wizard._files[t.id] = t.files[0];
+        state.wizard.data[t.id] = t.files[0].name;
+        toast("أُرفق «" + t.files[0].name + "» — سيُرفع إلى Google Drive عند الحفظ.", "ok");
+      }
+    }
+  });
+
+  document.addEventListener("input", (e) => {
+    if (e.target.dataset && e.target.dataset.res) {
+      const w = state.wizard;
+      if (w) {
+        const id = e.target.dataset.res, k = e.target.dataset.k;
+        w.data._results = w.data._results || {};
+        w.data._results[id] = w.data._results[id] || { met: 0, app: 0, undoc: 0 };
+        w.data._results[id][k] = e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || 0);
+        const tr = e.target.closest("tr");
+        const r = w.data._results[id];
+        const den = (Number(r.app) || 0) - (Number(r.undoc) || 0);
+        const rate = den > 0 ? (Number(r.met) || 0) / den * 100 : null;
+        const cell = tr && tr.querySelector("td:last-child b");
+        if (cell) cell.textContent = fmtPct(rate);
+        const box = $("#liveTotals");
+        if (box) {
+          const tot = w.data.criteria.reduce((a, c) => {
+            const x = (w.data._results && w.data._results[c.id]) || {};
+            a.met += Number(x.met) || 0; a.app += Number(x.app) || 0; a.undoc += Number(x.undoc) || 0; return a;
+          }, { met: 0, app: 0, undoc: 0 });
+          const d2 = tot.app - tot.undoc;
+          const set = (key, val) => { const el = box.querySelector(`[data-lt="${key}"]`); if (el) el.textContent = val; };
+          set("met", tot.met); set("app", tot.app); set("undoc", tot.undoc);
+          set("rate", fmtPct(d2 > 0 ? tot.met / d2 * 100 : null));
+        }
+      }
+    }
+    if (e.target.id === "fltQ") {
+      state.filters.q = e.target.value;
+      const body = e.target.closest(".card").querySelector(".table-wrap");
+      const list = filteredProjects();
+      if (body) body.innerHTML = list.length ? projectsTable(list) : `<div class="empty">${icon("search")}<b>لا نتائج</b></div>`;
+    }
+    if (e.target.id === "globalSearch") {
+      state.filters.q = e.target.value;
+      state.view = "projects";
+      renderShell();
+      const g = $("#globalSearch"); if (g) { g.value = e.target.value; g.focus(); }
+    }
+  });
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "fltDept") {
+      state.filters.dept = e.target.value;
+      const body = e.target.closest(".card").querySelector(".table-wrap");
+      const list = filteredProjects();
+      if (body) body.innerHTML = projectsTable(list);
+    }
+    if (e.target.id === "dashSort") { state.dashSort = e.target.value; renderShell(); }
+    if (e.target.id === "w_dcStart" || e.target.id === "w_dcEnd") { syncWizardFromDOM(); renderShell(); }
+    if (["w_criteriaSource", "criteriaDoc", "resultsDoc", "recDoc"].includes(e.target.id)) { syncWizardFromDOM(); renderShell(); }
+    if (e.target.id === "fltState") { state.filters.state = e.target.value; renderShell(); }
+  });
+  document.addEventListener("submit", async (e) => {
+    if (e.target.id === "loginForm") {
+      e.preventDefault();
+      await doLogin($("#loginEmail").value.trim(), $("#loginPass").value);
+    } else if (e.target.id === "signupForm") {
+      e.preventDefault();
+      await doSignup($("#suName").value, $("#suEmail").value.trim(), $("#suPass").value, $("#suInvite").value);
+    } else if (e.target.id === "addMemberForm") {
+      e.preventDefault();
+      await addMember($("#amName").value, $("#amEmail").value.trim(), $("#amPass").value);
+    } else if (e.target.id === "addSubteamForm") {
+      e.preventDefault();
+      const name = $("#stName").value.trim();
+      if (!name) { toast("اسم الفريق الفرعي مطلوب.", "warn"); return; }
+      if (state.role !== "creator") { toast("إنشاء الفرق الفرعية من صلاحية منشئ الموقع فقط.", "warn"); return; }
+      const teams = loadSubteams().slice();
+      teams.push({ id: "st" + Date.now(), teamNo: ($("#stTeamNo") || {}).value || "", name, leader: $("#stLeader").value.trim(), members: $("#stMembers").value.trim() });
+      await saveSubteams(teams); renderShell(); toast("أُضيف الفريق الفرعي.");
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+  $("#menuBtn").addEventListener("click", (e) => { e.stopPropagation(); $("#sidebar").classList.toggle("open"); });
+  $("#logoutBtn").addEventListener("click", modalLogout);
+  document.addEventListener("click", (e) => {
+    const sb = $("#sidebar");
+    if (!sb || !sb.classList.contains("open")) return;
+    if (sb.contains(e.target) || e.target.closest("#menuBtn")) return;
+    sb.classList.remove("open");
+  });
+  window.addEventListener("popstate", () => {
+    if (state.wizard) { state.wizard = null; state.view = "projects"; renderShell(); return; }
+    if (state.view === "project") { state.view = "projects"; state.projectId = null; renderShell(); return; }
+    if (state.view !== "dashboard") { state.view = "dashboard"; renderShell(); return; }
+    history.pushState({ ca: 1 }, "");
+  });
+  history.pushState({ ca: 1 }, "");
+}
+
+/* --------------------------------------------------------------------------
+   الحسابات: إنشاء حساب، تسجيل الدخول والخروج، وإدارة الأعضاء
+   -------------------------------------------------------------------------- */
+const USERS_KEY = "mwasat_audit_users_v1";
+const SESSION_KEY = "mwasat_audit_session_v1";
+const INVITE_CODE = "MWASAT-AUDIT-2026";
+
+function loadUsers() {
+  try {
+    const raw = localStorage.getItem(USERS_KEY);
+    if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) return a; }
+  } catch (e) { console.warn("تعذّر قراءة الحسابات", e); }
+  return [];
+}
+function saveUsers(list) {
+  try { localStorage.setItem(USERS_KEY, JSON.stringify(list)); }
+  catch (e) { console.warn("تعذّر حفظ الحسابات", e); }
+}
+function passProblem(p) {
+  if (!p || p.length < 8) return "كلمة المرور يجب أن تكون 8 أحرف على الأقل.";
+  if (!/[A-Za-z\u0600-\u06FF]/.test(p)) return "كلمة المرور يجب أن تحتوي على حرف واحد على الأقل.";
+  if (!/[0-9]/.test(p)) return "كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.";
+  if (!/[^A-Za-z0-9\u0600-\u06FF\s]/.test(p)) return "كلمة المرور يجب أن تحتوي على رمز واحد على الأقل (مثل @ # $ !).";
+  return "";
+}
+async function hashPass(p) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(p));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function authMsg(msg, type) {
+  const el = $("#authMsg");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = "auth-msg show " + (type || "bad");
+}
+function showAuthTab(tab) {
+  $$(".auth-tab").forEach((b) => b.classList.toggle("active", b.dataset.authTab === tab));
+  const lf = $("#loginForm"), sf = $("#signupForm");
+  if (lf) lf.classList.toggle("hide", tab !== "login");
+  if (sf) sf.classList.toggle("hide", tab !== "signup");
+  const el = $("#authMsg"); if (el) el.className = "auth-msg";
+}
+function enterApp() {
+  $("#loginScreen").classList.add("hide");
+  $("#appShell").classList.remove("hide");
+  state.view = "dashboard";
+  renderShell();
+  toast(`مرحباً ${state.user.name}`);
+}
+async function fileToDataURL(input) {
+  const f = input && input.files && input.files[0];
+  if (!f) return "";
+  if (f.size > 400 * 1024) { toast("حجم الصورة يتجاوز 400 كيلوبايت.", "warn"); return ""; }
+  return await new Promise((resolve) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ""));
+    r.onerror = () => resolve("");
+    r.readAsDataURL(f);
+  });
+}
+async function doLogin(email, pass) {
+  if (!email) { authMsg("أدخل البريد الإلكتروني."); return; }
+  try {
+    await api("POST", "/api/auth/login", { email, password: pass });
+    await refreshState();
+    enterApp();
+  } catch (e) {
+    authMsg(e.message || "تعذّر تسجيل الدخول.");
+  }
+}
+async function doSignup(name, email, pass, invite) {
+  if (!name.trim()) { authMsg("الاسم الثلاثي مطلوب."); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { authMsg("البريد الإلكتروني غير صالح."); return; }
+  const pwErr = passProblem(pass);
+  if (pwErr) { authMsg(pwErr); return; }
+  if (invite.trim() !== INVITE_CODE) { authMsg("كود الدعوة غير صحيح."); return; }
+  const avatar = await fileToDataURL($("#suAvatar"));
+  try {
+    await api("POST", "/api/auth/signup", { name: name.trim(), email: email.trim().toLowerCase(), password: pass, invite: invite.trim(), avatar });
+    await refreshState();
+    enterApp();
+    toast("أُنشئ الحساب وأُضيف إلى فريق التدقيق.");
+  } catch (e) {
+    authMsg(e.message || "تعذّر إنشاء الحساب.");
+  }
+}
+async function addMember(name, email, pass) {
+  if (!name.trim()) { toast("الاسم مطلوب.", "warn"); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast("البريد الإلكتروني غير صالح.", "warn"); return; }
+  const pwErr2 = passProblem(pass);
+  if (pwErr2) { toast(pwErr2, "warn"); return; }
+  const avatar = await fileToDataURL($("#amAvatar"));
+  try {
+    await api("POST", "/api/members", { name: name.trim(), email: email.trim().toLowerCase(), password: pass, avatar });
+    await refreshState();
+    renderShell();
+    toast("أُضيف العضو الجديد إلى قائمة الأعضاء.");
+  } catch (e) {
+    toast("تعذّر إضافة العضو: " + e.message, "bad");
+  }
+}
+function removeMember(id) {
+  if (!state.user || id === state.user.id) { toast("لا يمكنك إزالة حسابك الحالي.", "warn"); return; }
+  if (state.role !== "creator") { toast("إزالة الأعضاء من صلاحية منشئ الموقع فقط.", "warn"); return; }
+  const u = (DB.users || []).find((x) => x.id === id);
+  if (!u) return;
+  openModal(`
+    <div class="modal-head"><h3>إزالة عضو نهائياً</h3><button class="btn btn-ghost btn-icon" data-close-modal>${icon("x")}</button></div>
+    <div class="modal-body"><p>ستُزال عضوية <b>${esc(u.name)}</b> ويُحذف حسابه من الموقع نهائياً. لا يمكن التراجع عن هذه العملية.</p></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" data-act="expel-confirm" data-id="${u.id}">${icon("trash")} إزالة نهائية</button>
+      <button class="btn btn-ghost" data-close-modal>إلغاء</button>
+    </div>`);
+}
+async function expelMember(id) {
+  try {
+    await api("DELETE", "/api/members/" + encodeURIComponent(id));
+    await refreshState();
+    closeModal(); renderShell();
+    toast("أُزيل العضو وحُذف حسابه نهائياً.");
+  } catch (e) { toast("تعذّرت الإزالة: " + e.message, "bad"); }
+}
+async function doLogout() {
+  try { await api("POST", "/api/auth/logout"); } catch (e) {}
+  state.role = null; state.user = null; state.wizard = null;
+  DB = { users: [], departments: [], projects: [], subteams: [], logs: [] };
+  $("#appShell").classList.add("hide");
+  $("#loginScreen").classList.remove("hide");
+  $("#modalRoot").innerHTML = "";
+  const lf = $("#loginForm"), sf = $("#signupForm");
+  if (lf) lf.reset(); if (sf) sf.reset();
+  showAuthTab("login");
+}
+
+/* --------------------------------------------------------------------------
+   التشغيل
+   -------------------------------------------------------------------------- */
+async function boot() {
+  bindGlobalEvents();
+  try {
+    await refreshState();
+    enterApp();
+  } catch (e) {
+    showAuthTab("login");
+  }
+}
+document.addEventListener("DOMContentLoaded", boot);
+
+</script>
+</body>
+</html>
